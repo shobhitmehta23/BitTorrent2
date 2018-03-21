@@ -5,6 +5,10 @@ import java.util.Arrays;
 
 import utils.CommonUtils;
 
+/**
+ * Implements the handshake message specified by the protocol
+ *
+ */
 public class HandshakeMessage implements Serializable {
 
 	private  final static String HEADER_VALUE = "P2PFILESHARINGPROJ";

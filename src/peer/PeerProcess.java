@@ -23,16 +23,28 @@ public class PeerProcess {
 		PeerProcess peerProcess = new PeerProcess();
 		peerProcess.peerId = Integer.parseInt(args[0]);
 
+		// load all peer info from peer config file.
 		peerProcess.loadPeerInfoConfig();
+		// set up connection with all other peers
 		peerProcess.setUpConnectionWithOtherPeers();
 	}
 
 	public void setUpConnectionWithOtherPeers() {
+		/*
+		 * This method consist of two parts.
+		 * part 1 - the peer will initiate a handshake connection with all the peers
+		 * declared above the current peer in the peer config file.
+		 * part 2 - the peer will wait for a handshake from all the peers declared
+		 * below itself in the peer config file.
+		 */
 		PeerInfo currentPeerInfo = peerInfoMap.get(peerId);
 		int currentPeerDeclaredOnLine = currentPeerInfo.getLineDeclared();
 		for (int remotePeerId : peerInfoMap.keySet()) {
 			PeerInfo remotePeerInfo = peerInfoMap.get(remotePeerId);
+			// compare line numbers
 			if (currentPeerDeclaredOnLine > remotePeerInfo.getLineDeclared()) {
+				// if the remote peer was declared above, the peer would already have been initiated
+				// and the current peer should start the handshake process
 				try {
 					Socket socket = new Socket(remotePeerInfo.getIp(), remotePeerInfo.getPortNo());
 					remotePeerInfo.initializeSocket(socket);
@@ -47,20 +59,26 @@ public class PeerProcess {
 			}
 		}
 
+		// this is now the second part for all the peers delcared below the current peer.
+		// as those peer processes might not have started, this current peer will wait on a
+		// new thread listening to connections.
 		new Thread(new Runnable() {
 
 			@Override
 			public void run() {
+				// we know that total connections for any peer should be (total_number_of_peers_in_system - 1)
 				int totalConnectionsRequired = peerInfoMap.keySet().size() - 1;  // set also contains current peerInfo
 
+				// but we have already made some connections in part 1
 				int connectionCount = peerConnectionManagers.size();
 				ServerSocket serverSocket = null;
 				try {
 					serverSocket = new ServerSocket(currentPeerInfo.getPortNo());
 
+					// untill we get required number of connections listen
 					while (connectionCount < totalConnectionsRequired) {
 						Socket connectionSocket = serverSocket.accept();
-						PeerInfo remotePeerInfo = new PeerInfo();
+						PeerInfo remotePeerInfo = new PeerInfo(); // we will initialize later
 						remotePeerInfo.initializeSocket(connectionSocket);
 						PeerConnectionManager peerConnectionManager= new PeerConnectionManager(currentPeerInfo, remotePeerInfo);
 						peerConnectionManager.start();
@@ -85,8 +103,9 @@ public class PeerProcess {
 					new FileReader(Constants.PEER_INFO_CONFIG_FILENAME));
 
 			String line = null;
-			int peerDeclaredOnLine = 0;
+			int peerDeclaredOnLine = 0;  // line number in file
 			while ((line = br.readLine()) != null) {
+				// split on whitespace
 				PeerInfo peerInfo = new PeerInfo(line.split("\\s+"), peerDeclaredOnLine++);
 				peerInfoMap.put(peerInfo.getPeerId(), peerInfo);
 			}
@@ -94,5 +113,47 @@ public class PeerProcess {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((peerConnectionManagers == null) ? 0 : peerConnectionManagers.hashCode());
+		result = prime * result + peerId;
+		result = prime * result + ((peerInfoMap == null) ? 0 : peerInfoMap.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (!(obj instanceof PeerProcess)) {
+			return false;
+		}
+		PeerProcess other = (PeerProcess) obj;
+		if (peerConnectionManagers == null) {
+			if (other.peerConnectionManagers != null) {
+				return false;
+			}
+		} else if (!peerConnectionManagers.equals(other.peerConnectionManagers)) {
+			return false;
+		}
+		if (peerId != other.peerId) {
+			return false;
+		}
+		if (peerInfoMap == null) {
+			if (other.peerInfoMap != null) {
+				return false;
+			}
+		} else if (!peerInfoMap.equals(other.peerInfoMap)) {
+			return false;
+		}
+		return true;
 	}
 }

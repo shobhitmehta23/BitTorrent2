@@ -20,6 +20,14 @@ public class PeerInfo {
 	public PeerInfo() {
 	}
 
+	/**
+	 * Set up PeerInfo from provided params
+	 * @param peerId Peer Id
+	 * @param ip IP address of Peer
+	 * @param portNo Port number at which the peer listens
+	 * @param hasFileInitially status of whether the peer has the complete file at beginning
+	 * @param line line at which the peer was declared in the config file
+	 */
 	public PeerInfo(int peerId, String ip, int portNo, boolean hasFileInitially, int line) {
 		this.peerId = peerId;
 		this.ip = ip;
@@ -29,6 +37,11 @@ public class PeerInfo {
 		initialized = true;
 	}
 
+	/**
+	 * Set up instance from params provided as String array
+	 * @param peerParams
+	 * @param line
+	 */
 	public PeerInfo(String peerParams[], int line) {
 		peerId = Integer.parseInt(peerParams[0]);
 		ip = peerParams[1];
