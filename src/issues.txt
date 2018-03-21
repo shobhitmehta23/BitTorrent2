@@ -1,0 +1,8 @@
+# remove unnecessary override implementations of equals and hashCode
+
+# file path for PeerInfo.cfg has been hardcoded in Constants.java. Fix it.
+
+# Test.java is for testing some random things in java. At the end delete entire
+default package.
+
+# remove System.out.println statements and replace by logging.
