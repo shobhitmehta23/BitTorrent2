@@ -21,12 +21,6 @@ public class DiskBasedFileManager implements IFileManager {
 			e.printStackTrace();
 		}
 
-		try {
-			randomAccessFile.setLength(fileSize);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
 		totalPieces = (int) Math.ceil((double)fileSize/pieceSize);
 		lastDataSize = fileSize % pieceSize;
 		lastDataSize = (lastDataSize == 0)? pieceSize : lastDataSize;
@@ -37,6 +31,12 @@ public class DiskBasedFileManager implements IFileManager {
 
 		if (hasFile) {
 			piecesAvailable.set(1, totalPieces + 1);
+		} else {
+			try {
+				randomAccessFile.setLength(fileSize);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
