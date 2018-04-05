@@ -44,38 +44,4 @@ public class DataMessage implements Serializable {
 		return "DataMessage [messageLength=" + CommonUtils.byteArrayToInteger(messageLength) + ", messageType=" + messageType
 				+ ", payload=" + Arrays.toString(payload) + "]";
 	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + Arrays.hashCode(messageLength);
-		result = prime * result + messageType;
-		result = prime * result + Arrays.hashCode(payload);
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (!(obj instanceof DataMessage)) {
-			return false;
-		}
-		DataMessage other = (DataMessage) obj;
-		if (!Arrays.equals(messageLength, other.messageLength)) {
-			return false;
-		}
-		if (messageType != other.messageType) {
-			return false;
-		}
-		if (!Arrays.equals(payload, other.payload)) {
-			return false;
-		}
-		return true;
-	}
 }

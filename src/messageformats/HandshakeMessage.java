@@ -47,38 +47,4 @@ public class HandshakeMessage implements Serializable {
 				+ new String(header) + ")" + ", total_size = " +
 				(peerId.length + header.length + reservedBits.length) * Byte.BYTES;
 	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + Arrays.hashCode(header);
-		result = prime * result + Arrays.hashCode(peerId);
-		result = prime * result + Arrays.hashCode(reservedBits);
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (!(obj instanceof HandshakeMessage)) {
-			return false;
-		}
-		HandshakeMessage other = (HandshakeMessage) obj;
-		if (!Arrays.equals(header, other.header)) {
-			return false;
-		}
-		if (!Arrays.equals(peerId, other.peerId)) {
-			return false;
-		}
-		if (!Arrays.equals(reservedBits, other.reservedBits)) {
-			return false;
-		}
-		return true;
-	}
 }

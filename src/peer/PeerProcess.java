@@ -114,46 +114,4 @@ public class PeerProcess {
 			e.printStackTrace();
 		}
 	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((peerConnectionManagers == null) ? 0 : peerConnectionManagers.hashCode());
-		result = prime * result + peerId;
-		result = prime * result + ((peerInfoMap == null) ? 0 : peerInfoMap.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (!(obj instanceof PeerProcess)) {
-			return false;
-		}
-		PeerProcess other = (PeerProcess) obj;
-		if (peerConnectionManagers == null) {
-			if (other.peerConnectionManagers != null) {
-				return false;
-			}
-		} else if (!peerConnectionManagers.equals(other.peerConnectionManagers)) {
-			return false;
-		}
-		if (peerId != other.peerId) {
-			return false;
-		}
-		if (peerInfoMap == null) {
-			if (other.peerInfoMap != null) {
-				return false;
-			}
-		} else if (!peerInfoMap.equals(other.peerInfoMap)) {
-			return false;
-		}
-		return true;
-	}
 }

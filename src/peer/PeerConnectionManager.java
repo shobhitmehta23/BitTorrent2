@@ -59,42 +59,4 @@ public class PeerConnectionManager extends Thread {
 			e.printStackTrace();
 		}
 	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((currentPeerInfo == null) ? 0 : currentPeerInfo.hashCode());
-		result = prime * result + ((remotePeerInfo == null) ? 0 : remotePeerInfo.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (!(obj instanceof PeerConnectionManager)) {
-			return false;
-		}
-		PeerConnectionManager other = (PeerConnectionManager) obj;
-		if (currentPeerInfo == null) {
-			if (other.currentPeerInfo != null) {
-				return false;
-			}
-		} else if (!currentPeerInfo.equals(other.currentPeerInfo)) {
-			return false;
-		}
-		if (remotePeerInfo == null) {
-			if (other.remotePeerInfo != null) {
-				return false;
-			}
-		} else if (!remotePeerInfo.equals(other.remotePeerInfo)) {
-			return false;
-		}
-		return true;
-	}
 }
