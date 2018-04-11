@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 public class InMemoryFileManager implements IFileManager {
 
@@ -17,7 +18,7 @@ public class InMemoryFileManager implements IFileManager {
 	private int totalPieces;
 	private int lastDataSize;
 	private String fileName;
-	boolean initialPeer;
+	private boolean hasFile;
 
 	public InMemoryFileManager(String fileName, int fileSize, int pieceSize,
 			boolean hasFile) {
@@ -25,7 +26,7 @@ public class InMemoryFileManager implements IFileManager {
 		lastDataSize = fileSize % pieceSize;
 		lastDataSize = (lastDataSize == 0)? pieceSize : lastDataSize;
 		this.fileName = fileName;
-		initialPeer = hasFile;
+		this.hasFile = hasFile;
 
 		piecesAvailable = new BitSet(totalPieces + 1); // to avoid 0 based indexing
 		piecesAvailable.set(0); // it is a bit we are not using.
@@ -44,18 +45,21 @@ public class InMemoryFileManager implements IFileManager {
 	}
 
 	@Override
-	synchronized public void setPiece(byte[] data, int pieceNumber) {
+	synchronized public boolean setPiece(byte[] data, int pieceNumber) {
 		if (!pieceToDataMap.containsKey(pieceNumber)) {
 			pieceToDataMap.put(pieceNumber, data);
 
 			piecesAvailable.set(pieceNumber);
+			return true;
 		}
+		return false;
 	}
 
 	@Override
-	public void flush() {
-		if (!initialPeer) {
+	synchronized public void flush() {
+		if (!hasFile) {
 			constructFile();
+			hasFile = true;
 		}
 	}
 
@@ -66,6 +70,7 @@ public class InMemoryFileManager implements IFileManager {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
+
 		for (int i = 1; i <= totalPieces; i++) {
 			try {
 				bufferedOutputStream.write(pieceToDataMap.get(i));
@@ -106,5 +111,34 @@ public class InMemoryFileManager implements IFileManager {
 
 			pieceToDataMap.put(i, data);
 		}
+	}
+
+	@Override
+	public int getRandomMissingPieceIndex(BitSet remotePeerBitSet) {
+		BitSet temp = (BitSet)remotePeerBitSet.clone();
+		temp.xor(piecesAvailable);
+		temp.andNot(piecesAvailable);
+
+		if (temp.isEmpty()) {
+			return -1;
+		}
+
+		int randomIndex = new Random().nextInt(temp.length());
+		return temp.nextSetBit(randomIndex);
+	}
+
+	@Override
+	public boolean hasAllPieces() {
+		return piecesAvailable.cardinality() == (1 + totalPieces);
+	}
+
+	@Override
+	public boolean hasAllPieces(BitSet remotePeerBitSet) {
+		return remotePeerBitSet.cardinality() == (1 + totalPieces);
+	}
+
+	@Override
+	public BitSet getPieceSet() {
+		return piecesAvailable;
 	}
 }

@@ -7,24 +7,46 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 
+import fileio.IFileManager;
+import scheduledtasks.DetermineOptimisticallyUnchokedNeighbour;
+import scheduledtasks.DeterminePreferredNeighbours;
 import utils.Constants;
 
 public class PeerProcess {
-	int peerId;
-	Map<Integer, PeerInfo> peerInfoMap;
-	List<PeerConnectionManager> peerConnectionManagers = new ArrayList<>();
+
+	public static PeerProcess peerProcess;
+	private int peerId;
+	private Map<Integer, PeerInfo> peerInfoMap;
+	private List<PeerInfo> peerList = new ArrayList<>(); // will not include the current peer
+	private List<PeerConnectionManager> peerConnectionManagers = new ArrayList<>();
+	private ProgramParams programParams = new ProgramParams();
+	private IFileManager iFileManager;
+	private DetermineOptimisticallyUnchokedNeighbour determineOptimisticallyUnchokedNeighbour;
+	private DeterminePreferredNeighbours determinePreferredNeighbours;
 
 	public static void main(String[] args) {
 
-		PeerProcess peerProcess = new PeerProcess();
+		peerProcess = new PeerProcess();
 		peerProcess.peerId = Integer.parseInt(args[0]);
 
 		// load all peer info from peer config file.
 		peerProcess.loadPeerInfoConfig();
+		peerProcess.loadFileManager();
+
+		peerProcess.determineOptimisticallyUnchokedNeighbour =
+				new DetermineOptimisticallyUnchokedNeighbour();
+
+		peerProcess.determinePreferredNeighbours =
+				new DeterminePreferredNeighbours();
+
 		// set up connection with all other peers
 		peerProcess.setUpConnectionWithOtherPeers();
 	}
@@ -108,10 +130,47 @@ public class PeerProcess {
 				// split on whitespace
 				PeerInfo peerInfo = new PeerInfo(line.split("\\s+"), peerDeclaredOnLine++);
 				peerInfoMap.put(peerInfo.getPeerId(), peerInfo);
+				if (peerInfo.getPeerId() != peerId) {
+					peerList.add(peerInfo);
+				}
 			}
 			br.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public void loadFileManager() {
+		iFileManager = programParams.constructFileManager(
+				peerInfoMap.get(peerId).isHasFileInitially());
+	}
+
+	public PeerInfo getPeerInfoForPeerId(int peerId) {
+		return peerInfoMap.get(peerId);
+	}
+
+
+	public ProgramParams getProgramParams() {
+		return programParams;
+	}
+
+	public IFileManager getiFileManager() {
+		return iFileManager;
+	}
+
+	public List<PeerInfo> getPeerList() {
+		return peerList;
+	}
+
+	public int getPeerId() {
+		return peerId;
+	}
+
+	public DetermineOptimisticallyUnchokedNeighbour getDetermineOptimisticallyUnchokedNeighbour() {
+		return determineOptimisticallyUnchokedNeighbour;
+	}
+
+	public DeterminePreferredNeighbours getDeterminePreferredNeighbours() {
+		return determinePreferredNeighbours;
 	}
 }

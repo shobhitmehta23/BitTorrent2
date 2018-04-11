@@ -8,3 +8,13 @@ default package.
 # remove System.out.println statements and replace by logging.
 
 # code clean
+
+# in determine preferred neighbour when the peer has file select neighbour randomly
+instead of using a priority queue.
+
+TODO -
+peer file handling
+logging
+state machine for choke unchoke
+setting download rates
+deleting the scheduler

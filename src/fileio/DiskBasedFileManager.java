@@ -4,6 +4,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.BitSet;
+import java.util.Random;
+
+import peer.PeerProcess;
 
 public class DiskBasedFileManager implements IFileManager {
 
@@ -12,6 +15,7 @@ public class DiskBasedFileManager implements IFileManager {
 	private int totalPieces;
 	private int lastDataSize;
 	private BitSet piecesAvailable;
+	private int numberOfFlushes;
 
 	public DiskBasedFileManager(String fileName, int fileSize, int pieceSize,
 			boolean hasFile) {
@@ -62,10 +66,10 @@ public class DiskBasedFileManager implements IFileManager {
 	}
 
 	@Override
-	synchronized public void setPiece(byte[] data, int pieceNumber) {
+	synchronized public boolean setPiece(byte[] data, int pieceNumber) {
 
 		if (piecesAvailable.get(pieceNumber)) {
-			return;
+			return false;
 		}
 
 		piecesAvailable.set(pieceNumber);
@@ -77,14 +81,48 @@ public class DiskBasedFileManager implements IFileManager {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
+		return true;
 	}
 
 	@Override
-	public void flush() {
+	synchronized public void flush() {
+		if (++numberOfFlushes < (PeerProcess.peerProcess.getPeerList().size() + 1)) {
+			return;
+		}
 		try {
 			randomAccessFile.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	@Override
+	public int getRandomMissingPieceIndex(BitSet remotePeerBitSet) {
+		BitSet temp = (BitSet)remotePeerBitSet.clone();
+		temp.xor(piecesAvailable);
+		temp.andNot(piecesAvailable);
+
+		if (temp.isEmpty()) {
+			return -1;
+		}
+
+		int randomIndex = new Random().nextInt(temp.length());
+		return temp.nextSetBit(randomIndex);
+	}
+
+	@Override
+	public boolean hasAllPieces() {
+		return piecesAvailable.cardinality() == (1 + totalPieces);
+	}
+
+	@Override
+	public boolean hasAllPieces(BitSet remotePeerBitSet) {
+		return remotePeerBitSet.cardinality() == (1 + totalPieces);
+	}
+
+	@Override
+	public BitSet getPieceSet() {
+		return piecesAvailable;
 	}
 }

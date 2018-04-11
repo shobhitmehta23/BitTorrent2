@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.BitSet;
 
 public class PeerInfo {
 	private int peerId;
@@ -16,6 +17,7 @@ public class PeerInfo {
 	private ObjectInputStream in;
 	private ObjectOutputStream out;
 	private boolean initialized;  // If waiting for other peer to connect, PeerInfo might not have been fully initialized
+	private BitSet peerPieces;
 
 	public PeerInfo() {
 	}
@@ -49,7 +51,22 @@ public class PeerInfo {
 		hasFileInitially = peerParams[3].equals("1");
 		lineDeclared = line;
 		initialized = true;
+
+		int totalPieces = PeerProcess.peerProcess.getProgramParams().getTotalPieces();
+		peerPieces = new BitSet(totalPieces + 1);
+		peerPieces.set(0);
+
+		if (hasFileInitially) {
+			peerPieces.set(1, totalPieces + 1);
+		}
 	}
+
+	public void copyPeerInfoSocketConfigs(PeerInfo otherPeerInfo) {
+		socket = otherPeerInfo.getSocket();
+		out = otherPeerInfo.getOut();
+		in = otherPeerInfo.getIn();
+	}
+
 
 	public void initializeSocket(Socket socket) {
 		this.socket = socket;
@@ -57,6 +74,7 @@ public class PeerInfo {
 			// do not exchange order of following two lines.
 			// unless you want to see magic.
 			out = new ObjectOutputStream(socket.getOutputStream());
+			out.flush();
 			in = new ObjectInputStream(socket.getInputStream());
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -122,5 +140,17 @@ public class PeerInfo {
 
 	public boolean isInitialized() {
 		return initialized;
+	}
+
+	public BitSet getPeerPieces() {
+		return peerPieces;
+	}
+
+	public void setPeerPieces(BitSet peerPieces) {
+		this.peerPieces = peerPieces;
+	}
+
+	public void markPeerPiece(int piece) {
+		peerPieces.set(piece);
 	}
 }

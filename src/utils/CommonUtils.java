@@ -22,4 +22,11 @@ public class CommonUtils {
 	public static int byteArrayToInteger(byte[] num) {
 		return ByteBuffer.wrap(num).getInt();
 	}
+
+	public static byte[] mergeByteArrays(byte []arrayOne, byte []arrayTwo) {
+		return ByteBuffer.allocate(arrayOne.length + arrayTwo.length)
+				.put(arrayOne)
+				.put(arrayTwo)
+				.array();
+	}
 }

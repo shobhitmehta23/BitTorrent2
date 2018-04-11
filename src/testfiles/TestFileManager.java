@@ -1,6 +1,6 @@
 package testfiles;
 
-import fileio.FileManager;
+import fileio.FileManagerFactory;
 import fileio.IFileManager;
 
 public class TestFileManager {
@@ -11,10 +11,10 @@ public class TestFileManager {
 	static String destinationFileName = "/Users/shobhit/Documents/workspace/BitTorrent2/src/testfiles/PeerInfo.java";
 
 	public static void main(String[] args) {
-		IFileManager iFileManagerSeed = new FileManager(sourceFileName,
+		IFileManager iFileManagerSeed = FileManagerFactory.constructFileManager(sourceFileName,
 				fileSize, pieceSize, true);
 
-		IFileManager iFManagerPeer = new FileManager(destinationFileName,
+		IFileManager iFManagerPeer = FileManagerFactory.constructFileManager(destinationFileName,
 				fileSize, pieceSize, false);
 
 		int totalPieces = (int) Math.ceil((double)fileSize/pieceSize);
