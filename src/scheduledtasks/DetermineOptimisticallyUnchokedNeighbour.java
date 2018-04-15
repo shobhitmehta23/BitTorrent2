@@ -1,11 +1,13 @@
 package scheduledtasks;
 
+import java.io.ObjectOutputStream;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import messageformats.DataMessage;
 import peer.PeerProcess;
 import peer.ProgramParams;
 
@@ -21,13 +23,18 @@ public class DetermineOptimisticallyUnchokedNeighbour implements Runnable {
 		ProgramParams programParams = PeerProcess.peerProcess.getProgramParams();
 
 		scheduler = Executors.newScheduledThreadPool(SIZE_OF_THREAD_POOL);
-		scheduler.scheduleWithFixedDelay(this, programParams.getOptimisticUnchokingInterval(),
+		scheduler.scheduleAtFixedRate(this, programParams.getOptimisticUnchokingInterval(),
 				programParams.getOptimisticUnchokingInterval(), TimeUnit.SECONDS);
 	}
 
 	@Override
 	public void run() {
 		Set<Integer> candidateSet = determinePreferredNeighbours.getNonPreferredButInterestedSet();
+
+		if (candidateSet.size() == 0) {
+			return;
+		}
+
 		int randomInt = new Random().nextInt(candidateSet.size());
 
 		int i = 0;
@@ -36,7 +43,15 @@ public class DetermineOptimisticallyUnchokedNeighbour implements Runnable {
 				optimisticallyUnchokedNeighbour = peerId;
 			}
 		}
-		// TODO send unchoke message
+
+		ObjectOutputStream objectOutputStream =
+				PeerProcess.peerProcess.getPeerInfoForPeerId(optimisticallyUnchokedNeighbour).getOut();
+		new DataMessage(DataMessage.MESSAGE_TYPE_UNCHOKE, null).sendDataMessage(objectOutputStream);
+	}
+
+
+	public void shutdown() {
+		scheduler.shutdown();
 	}
 
 	public boolean isOptimisticallyUnchokedneighbour(int peerId) {

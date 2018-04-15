@@ -1,12 +1,17 @@
+import java.io.File;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+
 import messageformats.DataMessage;
 import messageformats.HandshakeMessage;
 
 public class Test {
 
 	public static void main(String[] args) {
-		System.out.println(2/5);
-		System.out.println((double)2/5);
-		System.out.println(2/(double)5);
+		Path path = FileSystems.getDefault().getPath(".").toAbsolutePath();
+		System.out.println(path.getParent());
+		File f = new File(path.getParent().toString() + "/" + "test_dir");
+		f.mkdirs();
 	}
 
 }

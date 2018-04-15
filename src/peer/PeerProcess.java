@@ -31,6 +31,7 @@ public class PeerProcess {
 	private IFileManager iFileManager;
 	private DetermineOptimisticallyUnchokedNeighbour determineOptimisticallyUnchokedNeighbour;
 	private DeterminePreferredNeighbours determinePreferredNeighbours;
+	private List<Socket> socketsToBeClosedRequestsPending = new ArrayList<>();
 
 	public static void main(String[] args) {
 
@@ -41,11 +42,11 @@ public class PeerProcess {
 		peerProcess.loadPeerInfoConfig();
 		peerProcess.loadFileManager();
 
-		peerProcess.determineOptimisticallyUnchokedNeighbour =
-				new DetermineOptimisticallyUnchokedNeighbour();
-
 		peerProcess.determinePreferredNeighbours =
 				new DeterminePreferredNeighbours();
+
+		peerProcess.determineOptimisticallyUnchokedNeighbour =
+				new DetermineOptimisticallyUnchokedNeighbour();
 
 		// set up connection with all other peers
 		peerProcess.setUpConnectionWithOtherPeers();
@@ -138,6 +139,32 @@ public class PeerProcess {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	synchronized public void closeRemotePeerInfoSocket(int peerId) {
+		socketsToBeClosedRequestsPending.add(peerInfoMap.get(peerId).getSocket());
+
+		// we will close all sockets after we get requests from all peers to
+		// shut down socket. Just to avoid some peer writing to a closed socket
+		// exception.
+		if (socketsToBeClosedRequestsPending.size() == peerList.size()) {
+			socketsToBeClosedRequestsPending.forEach(socket->{
+				try {
+					socket.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			});
+
+			// handle program shut down
+			shutDownSchedulers();
+		}
+	}
+
+	private void shutDownSchedulers() {
+		determineOptimisticallyUnchokedNeighbour.shutdown();
+		determinePreferredNeighbours.shutdown();
+		System.out.println("peer id " + peerId + " terminating");
 	}
 
 	public void loadFileManager() {

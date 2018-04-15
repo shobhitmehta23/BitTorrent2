@@ -86,6 +86,7 @@ public class PeerConnectionManager extends Thread {
 				PeerProcess.peerProcess.getDeterminePreferredNeighbours();
 		DetermineOptimisticallyUnchokedNeighbour determineOptimisticallyUnchokedNeighbour =
 				PeerProcess.peerProcess.getDetermineOptimisticallyUnchokedNeighbour();
+		PeerDownloadRate peerDownloadRate = new PeerDownloadRate();
 		// while current peer does not have all pieces OR
 		// the remote peer does not have all pieces.
 		while ((!iFileManager.hasAllPieces()) ||
@@ -93,10 +94,8 @@ public class PeerConnectionManager extends Thread {
 
 			DataMessage messageReceived = null;
 			try {
-				System.out.println(remotePeerInfo.getPeerPieces());
 				messageReceived = (DataMessage)in.readObject();
 			} catch (ClassNotFoundException | IOException e) {
-				e.printStackTrace();
 				continue;
 			}
 
@@ -116,7 +115,6 @@ public class PeerConnectionManager extends Thread {
 
 			case DataMessage.MESSAGE_TYPE_HAVE:
 				int pieceNumber = CommonUtils.byteArrayToInteger(messageReceived.getPayload());
-				System.out.println("ha " + pieceNumber);
 				remotePeerInfo.markPeerPiece(pieceNumber);
 				index = iFileManager.getRandomMissingPieceIndex(remotePeerInfo.getPeerPieces());
 				if (index != -1) {
@@ -138,6 +136,10 @@ public class PeerConnectionManager extends Thread {
 				break;
 
 			case DataMessage.MESSAGE_TYPE_REQUEST:
+				if (!(determinePreferredNeighbours.isPreferredNeighbour(remotePeerInfo.getPeerId()) ||
+						determineOptimisticallyUnchokedNeighbour.isOptimisticallyUnchokedneighbour(remotePeerInfo.getPeerId()))) {
+					break;
+				}
 				pieceNumber = CommonUtils.byteArrayToInteger(messageReceived.getPayload());
 				byte[] pieceData = iFileManager.getPiece(pieceNumber);
 				DataMessage pieceMessage = new DataMessage(
@@ -147,6 +149,8 @@ public class PeerConnectionManager extends Thread {
 				break;
 
 			case DataMessage.MESSAGE_TYPE_PIECE:
+				peerDownloadRate.stopTimer();
+				determinePreferredNeighbours.updateDownloadRate(peerDownloadRate);
 				pieceNumber = messageReceived.getPieceNumberForPieceData(messageReceived.getPayload());
 				pieceData = messageReceived.getPieceData(messageReceived.getPayload());
 				boolean didISet = iFileManager.setPiece(pieceData, pieceNumber);
@@ -162,6 +166,7 @@ public class PeerConnectionManager extends Thread {
 					DataMessage requestMessage = new DataMessage(
 							DataMessage.MESSAGE_TYPE_REQUEST, CommonUtils.intToByteArray(index));
 					requestMessage.sendDataMessage(out);
+					peerDownloadRate.startTimer();
 				}
 
 				PeerProcess.peerProcess.getPeerList().forEach(peerInfo->{
@@ -183,11 +188,13 @@ public class PeerConnectionManager extends Thread {
 					DataMessage requestMessage = new DataMessage(
 							DataMessage.MESSAGE_TYPE_REQUEST, CommonUtils.intToByteArray(index));
 					requestMessage.sendDataMessage(out);
+					peerDownloadRate.startTimer();
 				}
 				break;
 
 			case DataMessage.MESSAGE_TYPE_CHOKE:
-				// do nothing ideally
+				peerDownloadRate.cancelTime();
+				determinePreferredNeighbours.updateDownloadRate(peerDownloadRate);
 				break;
 			}
 
@@ -195,7 +202,7 @@ public class PeerConnectionManager extends Thread {
 
 		try {
 			iFileManager.flush();
-			remotePeerInfo.getSocket().close();
+			remotePeerInfo.bufferedShutdownSocket();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

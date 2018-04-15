@@ -1,8 +1,11 @@
 package peer;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.util.Arrays;
 
 import fileio.FileManagerFactory;
@@ -36,10 +39,20 @@ public class ProgramParams {
 	}
 
 	public IFileManager constructFileManager(boolean hasFile) {
+
 		if (!hasFile) {
-			String []temp = fileName.split("\\.");
-			fileName = temp[0] + "_" + PeerProcess.peerProcess.getPeerId() + "." + temp[1];
+			// construct peer directory
+			Path currentPathParent = FileSystems.getDefault().getPath(".").toAbsolutePath().getParent();
+			String peerFolderName = currentPathParent.toString() + "/" + "peer_" + PeerProcess.peerProcess.getPeerId();
+			File peerDir = new File(peerFolderName);
+			peerDir.mkdirs();
+
+			// make file path point to the newly constructed directory
+			File tempFileName = new File(fileName);
+			String fileNameWithoutPath = tempFileName.getName();
+			fileName = new File(peerFolderName, fileNameWithoutPath).getAbsolutePath();
 		}
+
 		return FileManagerFactory.constructFileManager(fileName, fileSize, pieceSize, hasFile);
 	}
 

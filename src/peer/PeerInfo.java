@@ -81,6 +81,10 @@ public class PeerInfo {
 		}
 	}
 
+	public void bufferedShutdownSocket() {
+		PeerProcess.peerProcess.closeRemotePeerInfoSocket(peerId);
+	}
+
 	public int getPeerId() {
 		return peerId;
 	}

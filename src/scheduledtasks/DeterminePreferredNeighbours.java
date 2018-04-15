@@ -1,5 +1,6 @@
 package scheduledtasks;
 
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -13,7 +14,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import fileio.IFileManager;
+import messageformats.DataMessage;
 import peer.PeerDownloadRate;
+import peer.PeerInfo;
 import peer.PeerProcess;
 import peer.ProgramParams;
 
@@ -43,7 +46,7 @@ public class DeterminePreferredNeighbours implements Runnable {
 
 	@Override
 	synchronized public void run() {
-
+		Set<Integer> newPreferredNeighbourSet = new HashSet<>();
 		// if the current file has all pieces, select
 		// preferred neighbours randomly
 		if (iFileManager.hasAllPieces()) {
@@ -54,34 +57,34 @@ public class DeterminePreferredNeighbours implements Runnable {
 			int numberOfPreferred = interestedNeighbourList.size() < numberOfPreferredNeighbours?
 					interestedNeighbourList.size() : numberOfPreferredNeighbours;
 
-			Set<Integer> newPreferredNeighbourSet = new HashSet<>();
 			for (int i = 0; i < numberOfPreferred; i++) {
 				newPreferredNeighbourSet.add(interestedNeighbourList.get(i));
 			}
-			preferredNeighbourSet = newPreferredNeighbourSet;
-			return;
-		}
 
-		PriorityQueue<PeerDownloadRate> sortedQueue = new PriorityQueue<>();
-		downloadRateMap.forEach((id, rate)-> {
-			if (interestedNeighbourSet.contains(id)) {
-				sortedQueue.add(new PeerDownloadRate(id, rate));
-			}
-		});
+		} else {
+			PriorityQueue<PeerDownloadRate> sortedQueue = new PriorityQueue<>();
+			downloadRateMap.forEach((id, rate)-> {
+				if (interestedNeighbourSet.contains(id)) {
+					sortedQueue.add(new PeerDownloadRate(id, rate));
+				}
+			});
 
-		Set<Integer> newPreferredNeighbourSet = new HashSet<>();
-		for (int i = 0; i < numberOfPreferredNeighbours; i++) {
-			PeerDownloadRate peer = sortedQueue.poll();
-			if (peer == null) {
-				break;
+			for (int i = 0; i < numberOfPreferredNeighbours; i++) {
+				PeerDownloadRate peer = sortedQueue.poll();
+				if (peer == null) {
+					break;
+				}
+				newPreferredNeighbourSet.add(peer.getPeerId());
 			}
-			newPreferredNeighbourSet.add(peer.getPeerId());
 		}
 
 		preferredNeighbourSet = newPreferredNeighbourSet;
 
-		// TODO
 		// send unchoke message
+		for (int peer : preferredNeighbourSet) {
+			ObjectOutputStream objectOutputStream = PeerProcess.peerProcess.getPeerInfoForPeerId(peer).getOut();
+			new DataMessage(DataMessage.MESSAGE_TYPE_UNCHOKE, null).sendDataMessage(objectOutputStream);
+		}
 	}
 
 	public void initializeDownloadRates() {
@@ -93,10 +96,20 @@ public class DeterminePreferredNeighbours implements Runnable {
 	}
 
 	synchronized public Set<Integer> getNonPreferredButInterestedSet() {
-		Set<Integer> nonPreferredButInterestedSet = new HashSet<>();
-		nonPreferredButInterestedSet.addAll(interestedNeighbourSet);
-		nonPreferredButInterestedSet.removeAll(preferredNeighbourSet);
-		return nonPreferredButInterestedSet;
+		try {
+			Set<Integer> nonPreferredButInterestedSet = new HashSet<>();
+			nonPreferredButInterestedSet.addAll(interestedNeighbourSet);
+			nonPreferredButInterestedSet.removeAll(preferredNeighbourSet);
+			return nonPreferredButInterestedSet;
+		} catch (Exception e) {
+			System.out.println(e);
+		}
+
+		return null;
+	}
+
+	public void shutdown() {
+		scheduler.shutdown();
 	}
 
 	public boolean isPreferredNeighbour(int peerId) {
@@ -111,7 +124,7 @@ public class DeterminePreferredNeighbours implements Runnable {
 		interestedNeighbourSet.remove(peerId);
 	}
 
-	public void updateDownloadRate(int peerId, double downloadRate) {
-		downloadRateMap.put(peerId, downloadRate);
+	public void updateDownloadRate(PeerDownloadRate peerDownloadRate) {
+		downloadRateMap.put(peerDownloadRate.getPeerId(), peerDownloadRate.getDownloadRate());
 	}
 }
