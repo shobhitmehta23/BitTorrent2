@@ -17,17 +17,16 @@ public class DiskBasedFileManager implements IFileManager {
 	private BitSet piecesAvailable;
 	private int numberOfFlushes;
 
-	public DiskBasedFileManager(String fileName, int fileSize, int pieceSize,
-			boolean hasFile) {
+	public DiskBasedFileManager(String fileName, int fileSize, int pieceSize, boolean hasFile) {
 		try {
 			randomAccessFile = new RandomAccessFile(fileName, "rw");
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
 
-		totalPieces = (int) Math.ceil((double)fileSize/pieceSize);
+		totalPieces = (int) Math.ceil((double) fileSize / pieceSize);
 		lastDataSize = fileSize % pieceSize;
-		lastDataSize = (lastDataSize == 0)? pieceSize : lastDataSize;
+		lastDataSize = (lastDataSize == 0) ? pieceSize : lastDataSize;
 		this.pieceSize = pieceSize;
 
 		piecesAvailable = new BitSet(totalPieces + 1);
@@ -99,7 +98,7 @@ public class DiskBasedFileManager implements IFileManager {
 
 	@Override
 	public int getRandomMissingPieceIndex(BitSet remotePeerBitSet) {
-		BitSet temp = (BitSet)remotePeerBitSet.clone();
+		BitSet temp = (BitSet) remotePeerBitSet.clone();
 		temp.xor(piecesAvailable);
 		temp.andNot(piecesAvailable);
 

@@ -11,7 +11,7 @@ import utils.CommonUtils;
  */
 public class HandshakeMessage implements Serializable {
 
-	private  final static String HEADER_VALUE = "P2PFILESHARINGPROJ";
+	private final static String HEADER_VALUE = "P2PFILESHARINGPROJ";
 	private final static int NO_OF_RESERVED_BITS = 10;
 
 	private final byte[] peerId;
@@ -42,9 +42,8 @@ public class HandshakeMessage implements Serializable {
 
 	@Override
 	public String toString() {
-		return "HandshakeMessage (peerid = " + CommonUtils.byteArrayToInteger(peerId) + ", "
-				+ "reserved bits = " + CommonUtils.byteArrayToInteger(reservedBits) + ", header = "
-				+ new String(header) + ")" + ", total_size = " +
-				(peerId.length + header.length + reservedBits.length) * Byte.BYTES;
+		return "HandshakeMessage (peerid = " + CommonUtils.byteArrayToInteger(peerId) + ", " + "reserved bits = "
+				+ CommonUtils.byteArrayToInteger(reservedBits) + ", header = " + new String(header) + ")"
+				+ ", total_size = " + (peerId.length + header.length + reservedBits.length) * Byte.BYTES;
 	}
 }

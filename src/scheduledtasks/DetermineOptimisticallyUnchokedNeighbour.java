@@ -49,22 +49,17 @@ public class DetermineOptimisticallyUnchokedNeighbour implements Runnable {
 			}
 		}
 
-		logger.log(Level.ALL,
-				CommonUtils.formatString(
-						"peer # has the optimistically unchoked neighbour #",
-						PeerProcess.peerProcess.getPeerId(),
-						optimisticallyUnchokedNeighbour));
+		logger.log(Level.ALL, CommonUtils.formatString("peer # has the optimistically unchoked neighbour #",
+				PeerProcess.peerProcess.getPeerId(), optimisticallyUnchokedNeighbour));
 
-		ObjectOutputStream objectOutputStream =
-				PeerProcess.peerProcess.getPeerInfoForPeerId(optimisticallyUnchokedNeighbour).getOut();
+		ObjectOutputStream objectOutputStream = PeerProcess.peerProcess
+				.getPeerInfoForPeerId(optimisticallyUnchokedNeighbour).getOut();
 		new DataMessage(DataMessage.MESSAGE_TYPE_UNCHOKE, null).sendDataMessage(objectOutputStream);
 	}
 
-
 	public void shutdown() {
 		Logger debugLogger = PeerProcess.peerProcess.getDebugLogger();
-		debugLogger.log(Level.ALL, CommonUtils.formatString(
-				"shutdown attempted on scheduler for peer #",
+		debugLogger.log(Level.ALL, CommonUtils.formatString("shutdown attempted on scheduler for peer #",
 				PeerProcess.peerProcess.getPeerId()));
 		scheduler.shutdownNow();
 	}

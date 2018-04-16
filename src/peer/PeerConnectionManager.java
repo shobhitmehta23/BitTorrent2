@@ -35,23 +35,20 @@ public class PeerConnectionManager extends Thread {
 
 	@Override
 	public void run() {
-		// if remotePeer is initialized, it means current peer should initiate handshake
+		// if remotePeer is initialized, it means current peer should initiate
+		// handshake
 		if (remotePeerInfo.isInitialized()) {
 			sendHandshakeMessage();
 			acceptHandshakeMessage();
 		} else {
 			acceptHandshakeMessage();
-			logger.log(Level.ALL,
-					CommonUtils.formatString(
-							"peer # is connected from peer #",
-							currentPeerInfo.getPeerId(),
-							remotePeerInfo.getPeerId()));
+			logger.log(Level.ALL, CommonUtils.formatString("peer # is connected from peer #",
+					currentPeerInfo.getPeerId(), remotePeerInfo.getPeerId()));
 			sendHandshakeMessage();
 		}
 
 		// send bit field message
-		DataMessage bitFieldMessage = new DataMessage(
-				DataMessage.MESSAGE_TYPE_BITFIELD,
+		DataMessage bitFieldMessage = new DataMessage(DataMessage.MESSAGE_TYPE_BITFIELD,
 				PeerProcess.peerProcess.getiFileManager().getPieceSet().toByteArray());
 		bitFieldMessage.sendDataMessage(remotePeerInfo.getOut());
 
@@ -61,9 +58,8 @@ public class PeerConnectionManager extends Thread {
 	public void acceptHandshakeMessage() {
 		ObjectInputStream in = remotePeerInfo.getIn();
 		try {
-			HandshakeMessage handshakeMessage = (HandshakeMessage)in.readObject();
-			PeerInfo remotePeerInfo = PeerProcess.peerProcess.getPeerInfoForPeerId(
-					handshakeMessage.getPeerIdAsInt());
+			HandshakeMessage handshakeMessage = (HandshakeMessage) in.readObject();
+			PeerInfo remotePeerInfo = PeerProcess.peerProcess.getPeerInfoForPeerId(handshakeMessage.getPeerIdAsInt());
 			remotePeerInfo.copyPeerInfoSocketConfigs(this.remotePeerInfo);
 			this.remotePeerInfo = remotePeerInfo;
 		} catch (ClassNotFoundException | IOException e) {
@@ -92,185 +88,161 @@ public class PeerConnectionManager extends Thread {
 		IFileManager iFileManager = PeerProcess.peerProcess.getiFileManager();
 		ObjectInputStream in = remotePeerInfo.getIn();
 		ObjectOutputStream out = remotePeerInfo.getOut();
-		DeterminePreferredNeighbours determinePreferredNeighbours =
-				PeerProcess.peerProcess.getDeterminePreferredNeighbours();
-		DetermineOptimisticallyUnchokedNeighbour determineOptimisticallyUnchokedNeighbour =
-				PeerProcess.peerProcess.getDetermineOptimisticallyUnchokedNeighbour();
+		DeterminePreferredNeighbours determinePreferredNeighbours = PeerProcess.peerProcess
+				.getDeterminePreferredNeighbours();
+		DetermineOptimisticallyUnchokedNeighbour determineOptimisticallyUnchokedNeighbour = PeerProcess.peerProcess
+				.getDetermineOptimisticallyUnchokedNeighbour();
 		PeerDownloadRate peerDownloadRate = new PeerDownloadRate();
 		// while current peer does not have all pieces OR
 		// the remote peer does not have all pieces.
 
-		while ((!(iFileManager.hasAllPieces())) ||
-				(!(iFileManager.hasAllPieces(remotePeerInfo.getPeerPieces())))) {
+		while ((!(iFileManager.hasAllPieces())) || (!(iFileManager.hasAllPieces(remotePeerInfo.getPeerPieces())))) {
 
 			try {
 
-			DataMessage messageReceived = null;
-			try {
-				messageReceived = (DataMessage)in.readObject();
-			} catch (OptionalDataException e) {
-				if (e.eof) {
-					System.out.println("EOF");
-				} else {
-					System.out.println("sss" + e.length);
+				DataMessage messageReceived = null;
+				try {
+					messageReceived = (DataMessage) in.readObject();
+				} catch (ClassNotFoundException | IOException e) {
+					logger.log(Level.ALL, "exception in " + remotePeerInfo.getPeerId());
+					e.printStackTrace();
+					continue;
 				}
-			} catch (ClassNotFoundException | IOException e) {
-				logger.log(Level.ALL, "exception in " + remotePeerInfo.getPeerId());
-				e.printStackTrace();
-				continue;
-			}
 
-			switch(messageReceived.getMessageType()) {
-			case DataMessage.MESSAGE_TYPE_BITFIELD:
-				BitSet peerBitSet = BitSet.valueOf(messageReceived.getPayload());
-				remotePeerInfo.setPeerPieces(peerBitSet);
-				int index = iFileManager.getRandomMissingPieceIndex(peerBitSet);
-				if (index == -1) {
-					DataMessage notInterestedMessage = new DataMessage(DataMessage.MESSAGE_TYPE_NOT_INTERESTED, null);
-					notInterestedMessage.sendDataMessage(out);
-				} else {
-					DataMessage interestedMessage = new DataMessage(DataMessage.MESSAGE_TYPE_INTERESTED, null);
-					interestedMessage.sendDataMessage(out);
-				}
-				break;
-
-			case DataMessage.MESSAGE_TYPE_HAVE:
-				int pieceNumber = CommonUtils.byteArrayToInteger(messageReceived.getPayload());
-				logger.log(Level.ALL,
-						CommonUtils.formatString(
-								"peer # received the 'have' message from peer # for piece #",
-								currentPeerInfo.getPeerId(),
-								remotePeerInfo.getPeerId(),
-								pieceNumber));
-				remotePeerInfo.markPeerPiece(pieceNumber);
-				index = iFileManager.getRandomMissingPieceIndex(remotePeerInfo.getPeerPieces());
-				if (index != -1) {
-					DataMessage interestedMessage = new DataMessage(DataMessage.MESSAGE_TYPE_INTERESTED, null);
-					interestedMessage.sendDataMessage(out);
-				}
-				break;
-
-			case DataMessage.MESSAGE_TYPE_INTERESTED:
-				logger.log(Level.ALL,
-						CommonUtils.formatString(
-								"peer # received the 'interested' message from peer #",
-								currentPeerInfo.getPeerId(),
-								remotePeerInfo.getPeerId()));
-				// add to interested list
-				determinePreferredNeighbours.addToInterested(remotePeerInfo.getPeerId());
-				break;
-
-			case DataMessage.MESSAGE_TYPE_NOT_INTERESTED:
-				// remove from interested list
-				determinePreferredNeighbours.removeFromInterested(remotePeerInfo.getPeerId());
-				logger.log(Level.ALL,
-						CommonUtils.formatString(
-								"peer # received the 'not interested' message from peer #",
-								currentPeerInfo.getPeerId(),
-								remotePeerInfo.getPeerId()));
-				break;
-
-			case DataMessage.MESSAGE_TYPE_REQUEST:
-				if (!(determinePreferredNeighbours.isPreferredNeighbour(remotePeerInfo.getPeerId()) ||
-						determineOptimisticallyUnchokedNeighbour.isOptimisticallyUnchokedneighbour(remotePeerInfo.getPeerId()))) {
+				switch (messageReceived.getMessageType()) {
+				case DataMessage.MESSAGE_TYPE_BITFIELD:
+					BitSet peerBitSet = BitSet.valueOf(messageReceived.getPayload());
+					remotePeerInfo.setPeerPieces(peerBitSet);
+					int index = iFileManager.getRandomMissingPieceIndex(peerBitSet);
+					if (index == -1) {
+						DataMessage notInterestedMessage = new DataMessage(DataMessage.MESSAGE_TYPE_NOT_INTERESTED,
+								null);
+						notInterestedMessage.sendDataMessage(out);
+					} else {
+						DataMessage interestedMessage = new DataMessage(DataMessage.MESSAGE_TYPE_INTERESTED, null);
+						interestedMessage.sendDataMessage(out);
+					}
 					break;
-				}
-				pieceNumber = CommonUtils.byteArrayToInteger(messageReceived.getPayload());
-				byte[] pieceData = iFileManager.getPiece(pieceNumber);
-				DataMessage pieceMessage = new DataMessage(
-						DataMessage.MESSAGE_TYPE_PIECE, CommonUtils.mergeByteArrays(messageReceived.getPayload(),
-								pieceData));
-				pieceMessage.sendDataMessage(out);
-				break;
 
-			case DataMessage.MESSAGE_TYPE_PIECE:
-				int numberOfPiecesBeforeThisPiece = iFileManager.getNumberOfPieces();
-				peerDownloadRate.stopTimer();
-				determinePreferredNeighbours.updateDownloadRate(peerDownloadRate);
-				pieceNumber = messageReceived.getPieceNumberForPieceData(messageReceived.getPayload());
-				pieceData = messageReceived.getPieceData(messageReceived.getPayload());
-
-				boolean didISet = iFileManager.setPiece(pieceData, pieceNumber);
-
-				/*if (!didISet) {
+				case DataMessage.MESSAGE_TYPE_HAVE:
+					int pieceNumber = CommonUtils.byteArrayToInteger(messageReceived.getPayload());
+					logger.log(Level.ALL,
+							CommonUtils.formatString("peer # received the 'have' message from peer # for piece #",
+									currentPeerInfo.getPeerId(), remotePeerInfo.getPeerId(), pieceNumber));
+					remotePeerInfo.markPeerPiece(pieceNumber);
+					index = iFileManager.getRandomMissingPieceIndex(remotePeerInfo.getPeerPieces());
+					if (index != -1) {
+						DataMessage interestedMessage = new DataMessage(DataMessage.MESSAGE_TYPE_INTERESTED, null);
+						interestedMessage.sendDataMessage(out);
+					}
 					break;
-				}*/
 
-				index = iFileManager.getRandomMissingPieceIndex(remotePeerInfo.getPeerPieces());
-				if (index == -1) {
-					DataMessage notInterestedMessage = new DataMessage(DataMessage.MESSAGE_TYPE_NOT_INTERESTED, null);
-					notInterestedMessage.sendDataMessage(out);
-				} else {
-					DataMessage requestMessage = new DataMessage(
-							DataMessage.MESSAGE_TYPE_REQUEST, CommonUtils.intToByteArray(index));
-					requestMessage.sendDataMessage(out);
-					peerDownloadRate.startTimer();
-				}
-
-				if (!didISet) {
+				case DataMessage.MESSAGE_TYPE_INTERESTED:
+					logger.log(Level.ALL,
+							CommonUtils.formatString("peer # received the 'interested' message from peer #",
+									currentPeerInfo.getPeerId(), remotePeerInfo.getPeerId()));
+					// add to interested list
+					determinePreferredNeighbours.addToInterested(remotePeerInfo.getPeerId());
 					break;
-				}
 
-				logger.log(Level.ALL,
-						CommonUtils.formatString(
-								"peer # has downloaded the message # from peer #. "
-								+ "The numer of pieces is now #",
-								currentPeerInfo.getPeerId(),
-								pieceNumber,
-								remotePeerInfo.getPeerId(),
-								(numberOfPiecesBeforeThisPiece + 1)));
+				case DataMessage.MESSAGE_TYPE_NOT_INTERESTED:
+					// remove from interested list
+					determinePreferredNeighbours.removeFromInterested(remotePeerInfo.getPeerId());
+					logger.log(Level.ALL,
+							CommonUtils.formatString("peer # received the 'not interested' message from peer #",
+									currentPeerInfo.getPeerId(), remotePeerInfo.getPeerId()));
+					break;
 
-				if ((numberOfPiecesBeforeThisPiece + 1) == iFileManager.getTotalPieces()) {
+				case DataMessage.MESSAGE_TYPE_REQUEST:
+					if (!(determinePreferredNeighbours.isPreferredNeighbour(remotePeerInfo.getPeerId())
+							|| determineOptimisticallyUnchokedNeighbour
+									.isOptimisticallyUnchokedneighbour(remotePeerInfo.getPeerId()))) {
+						break;
+					}
+					pieceNumber = CommonUtils.byteArrayToInteger(messageReceived.getPayload());
+					byte[] pieceData = iFileManager.getPiece(pieceNumber);
+					DataMessage pieceMessage = new DataMessage(DataMessage.MESSAGE_TYPE_PIECE,
+							CommonUtils.mergeByteArrays(messageReceived.getPayload(), pieceData));
+					pieceMessage.sendDataMessage(out);
+					break;
+
+				case DataMessage.MESSAGE_TYPE_PIECE:
+					int numberOfPiecesBeforeThisPiece = iFileManager.getNumberOfPieces();
+					peerDownloadRate.stopTimer();
+					determinePreferredNeighbours.updateDownloadRate(peerDownloadRate);
+					pieceNumber = messageReceived.getPieceNumberForPieceData(messageReceived.getPayload());
+					pieceData = messageReceived.getPieceData(messageReceived.getPayload());
+
+					boolean didISet = iFileManager.setPiece(pieceData, pieceNumber);
+
+					index = iFileManager.getRandomMissingPieceIndex(remotePeerInfo.getPeerPieces());
+					if (index == -1) {
+						DataMessage notInterestedMessage = new DataMessage(DataMessage.MESSAGE_TYPE_NOT_INTERESTED,
+								null);
+						notInterestedMessage.sendDataMessage(out);
+					} else {
+						DataMessage requestMessage = new DataMessage(DataMessage.MESSAGE_TYPE_REQUEST,
+								CommonUtils.intToByteArray(index));
+						requestMessage.sendDataMessage(out);
+						peerDownloadRate.startTimer();
+					}
+
+					if (!didISet) {
+						break;
+					}
+
 					logger.log(Level.ALL,
 							CommonUtils.formatString(
-									"peer # has downloaded the complete file",
-									currentPeerInfo.getPeerId()));
-				}
+									"peer # has downloaded the message # from peer #. "
+											+ "The numer of pieces is now #",
+									currentPeerInfo.getPeerId(), pieceNumber, remotePeerInfo.getPeerId(),
+									(numberOfPiecesBeforeThisPiece + 1)));
 
-				PeerProcess.peerProcess.getPeerList().forEach(peerInfo->{
-					DataMessage haveMessage = new DataMessage(
-							DataMessage.MESSAGE_TYPE_HAVE, CommonUtils.intToByteArray(pieceNumber));
-					ObjectOutputStream tempOut = peerInfo.getOut();
-					if (tempOut != null) {
-						haveMessage.sendDataMessage(peerInfo.getOut());
+					if ((numberOfPiecesBeforeThisPiece + 1) == iFileManager.getTotalPieces()) {
+						logger.log(Level.ALL, CommonUtils.formatString("peer # has downloaded the complete file",
+								currentPeerInfo.getPeerId()));
 					}
-				});
-				break;
 
-			case DataMessage.MESSAGE_TYPE_UNCHOKE:
-				logger.log(Level.ALL,
-						CommonUtils.formatString(
-								"peer # is unchoked by peer #",
-								currentPeerInfo.getPeerId(),
-								remotePeerInfo.getPeerId()));
-				index = iFileManager.getRandomMissingPieceIndex(remotePeerInfo.getPeerPieces());
-				if (index == -1) {
-					DataMessage notInterestedMessage = new DataMessage(DataMessage.MESSAGE_TYPE_NOT_INTERESTED, null);
-					notInterestedMessage.sendDataMessage(out);
-				} else {
-					DataMessage requestMessage = new DataMessage(
-							DataMessage.MESSAGE_TYPE_REQUEST, CommonUtils.intToByteArray(index));
-					requestMessage.sendDataMessage(out);
-					peerDownloadRate.startTimer();
+					PeerProcess.peerProcess.getPeerList().forEach(peerInfo -> {
+						DataMessage haveMessage = new DataMessage(DataMessage.MESSAGE_TYPE_HAVE,
+								CommonUtils.intToByteArray(pieceNumber));
+						ObjectOutputStream tempOut = peerInfo.getOut();
+						if (tempOut != null) {
+							haveMessage.sendDataMessage(peerInfo.getOut());
+						}
+					});
+					break;
+
+				case DataMessage.MESSAGE_TYPE_UNCHOKE:
+					logger.log(Level.ALL, CommonUtils.formatString("peer # is unchoked by peer #",
+							currentPeerInfo.getPeerId(), remotePeerInfo.getPeerId()));
+					index = iFileManager.getRandomMissingPieceIndex(remotePeerInfo.getPeerPieces());
+					if (index == -1) {
+						DataMessage notInterestedMessage = new DataMessage(DataMessage.MESSAGE_TYPE_NOT_INTERESTED,
+								null);
+						notInterestedMessage.sendDataMessage(out);
+					} else {
+						DataMessage requestMessage = new DataMessage(DataMessage.MESSAGE_TYPE_REQUEST,
+								CommonUtils.intToByteArray(index));
+						requestMessage.sendDataMessage(out);
+						peerDownloadRate.startTimer();
+					}
+
+					break;
+
+				case DataMessage.MESSAGE_TYPE_CHOKE:
+					logger.log(Level.ALL, CommonUtils.formatString("peer # is choked by peer #",
+							currentPeerInfo.getPeerId(), remotePeerInfo.getPeerId()));
+					peerDownloadRate.cancelTime();
+					determinePreferredNeighbours.updateDownloadRate(peerDownloadRate);
+					break;
 				}
-
-				break;
-
-			case DataMessage.MESSAGE_TYPE_CHOKE:
-				logger.log(Level.ALL,
-						CommonUtils.formatString(
-								"peer # is choked by peer #",
-								currentPeerInfo.getPeerId(),
-								remotePeerInfo.getPeerId()));
-				peerDownloadRate.cancelTime();
-				determinePreferredNeighbours.updateDownloadRate(peerDownloadRate);
-				break;
-			}
 
 			} catch (Exception e) {
-				PeerProcess.peerProcess.getDebugLogger().log(Level.ALL, CommonUtils.formatString(
-						"Exception encoutered and handle in connection between peer # and peer #",
-						currentPeerInfo.getPeerId(), remotePeerInfo.getPeerId()));
+				PeerProcess.peerProcess.getDebugLogger().log(Level.ALL,
+						CommonUtils.formatString(
+								"Exception encoutered and handle in connection between peer # and peer #",
+								currentPeerInfo.getPeerId(), remotePeerInfo.getPeerId()));
 			}
 
 		}

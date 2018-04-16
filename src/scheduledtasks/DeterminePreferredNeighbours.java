@@ -43,9 +43,8 @@ public class DeterminePreferredNeighbours implements Runnable {
 
 		// schedule it
 		scheduler = Executors.newScheduledThreadPool(SIZE_OF_THREAD_POOL);
-		scheduler.scheduleAtFixedRate(
-				this, programParams.getUnchokingInterval(),
-				programParams.getUnchokingInterval(), TimeUnit.SECONDS);
+		scheduler.scheduleAtFixedRate(this, programParams.getUnchokingInterval(), programParams.getUnchokingInterval(),
+				TimeUnit.SECONDS);
 
 		logger = PeerProcess.peerProcess.getLogger();
 	}
@@ -60,8 +59,8 @@ public class DeterminePreferredNeighbours implements Runnable {
 			interestedNeighbourList.addAll(interestedNeighbourSet);
 			Collections.shuffle(interestedNeighbourList);
 
-			int numberOfPreferred = interestedNeighbourList.size() < numberOfPreferredNeighbours?
-					interestedNeighbourList.size() : numberOfPreferredNeighbours;
+			int numberOfPreferred = interestedNeighbourList.size() < numberOfPreferredNeighbours
+					? interestedNeighbourList.size() : numberOfPreferredNeighbours;
 
 			for (int i = 0; i < numberOfPreferred; i++) {
 				newPreferredNeighbourSet.add(interestedNeighbourList.get(i));
@@ -69,7 +68,7 @@ public class DeterminePreferredNeighbours implements Runnable {
 
 		} else {
 			PriorityQueue<PeerDownloadRate> sortedQueue = new PriorityQueue<>();
-			downloadRateMap.forEach((id, rate)-> {
+			downloadRateMap.forEach((id, rate) -> {
 				if (interestedNeighbourSet.contains(id)) {
 					sortedQueue.add(new PeerDownloadRate(id, rate));
 				}
@@ -86,11 +85,8 @@ public class DeterminePreferredNeighbours implements Runnable {
 
 		preferredNeighbourSet = newPreferredNeighbourSet;
 
-		logger.log(Level.ALL,
-				CommonUtils.formatString(
-						"peer # has the preferred neighbours #",
-						PeerProcess.peerProcess.getPeerId(),
-						preferredNeighbourSet));
+		logger.log(Level.ALL, CommonUtils.formatString("peer # has the preferred neighbours #",
+				PeerProcess.peerProcess.getPeerId(), preferredNeighbourSet));
 
 		// send unchoke message
 		for (int peer : preferredNeighbourSet) {
@@ -102,7 +98,7 @@ public class DeterminePreferredNeighbours implements Runnable {
 	public void initializeDownloadRates() {
 		downloadRateMap = new ConcurrentHashMap<>();
 
-		PeerProcess.peerProcess.getPeerList().forEach(peer->{
+		PeerProcess.peerProcess.getPeerList().forEach(peer -> {
 			downloadRateMap.put(peer.getPeerId(), 0.0);
 		});
 	}

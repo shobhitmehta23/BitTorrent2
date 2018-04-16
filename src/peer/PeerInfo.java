@@ -20,7 +20,9 @@ public class PeerInfo {
 	private Socket socket; // socket connected to the peer
 	private ObjectInputStream in;
 	private ObjectOutputStream out;
-	private boolean initialized;  // If waiting for other peer to connect, PeerInfo might not have been fully initialized
+	private boolean initialized; // If waiting for other peer to connect,
+									// PeerInfo might not have been fully
+									// initialized
 	private BitSet peerPieces;
 
 	public PeerInfo() {
@@ -28,11 +30,17 @@ public class PeerInfo {
 
 	/**
 	 * Set up PeerInfo from provided params
-	 * @param peerId Peer Id
-	 * @param ip IP address of Peer
-	 * @param portNo Port number at which the peer listens
-	 * @param hasFileInitially status of whether the peer has the complete file at beginning
-	 * @param line line at which the peer was declared in the config file
+	 *
+	 * @param peerId
+	 *            Peer Id
+	 * @param ip
+	 *            IP address of Peer
+	 * @param portNo
+	 *            Port number at which the peer listens
+	 * @param hasFileInitially
+	 *            status of whether the peer has the complete file at beginning
+	 * @param line
+	 *            line at which the peer was declared in the config file
 	 */
 	public PeerInfo(int peerId, String ip, int portNo, boolean hasFileInitially, int line) {
 		this.peerId = peerId;
@@ -45,6 +53,7 @@ public class PeerInfo {
 
 	/**
 	 * Set up instance from params provided as String array
+	 *
 	 * @param peerParams
 	 * @param line
 	 */
@@ -71,7 +80,6 @@ public class PeerInfo {
 		in = otherPeerInfo.getIn();
 	}
 
-
 	public void initializeSocket(Socket socket) {
 		this.socket = socket;
 		try {
@@ -87,9 +95,9 @@ public class PeerInfo {
 
 	public void bufferedShutdownSocket() {
 		Logger debugLogger = PeerProcess.peerProcess.getDebugLogger();
-		debugLogger.log(Level.ALL, CommonUtils.formatString(
-				"Buffered shutdown called on connection for peer # with peer #",
-				PeerProcess.peerProcess.getPeerId(), peerId));
+		debugLogger.log(Level.ALL,
+				CommonUtils.formatString("Buffered shutdown called on connection for peer # with peer #",
+						PeerProcess.peerProcess.getPeerId(), peerId));
 		PeerProcess.peerProcess.closeRemotePeerInfoSocket(peerId);
 	}
 
@@ -148,7 +156,6 @@ public class PeerInfo {
 	public void setInitialized() {
 		initialized = true;
 	}
-
 
 	public boolean isInitialized() {
 		return initialized;

@@ -33,7 +33,8 @@ public class PeerProcess {
 	private Logger logger;
 	private Logger debugLogger;
 	private Map<Integer, PeerInfo> peerInfoMap;
-	private List<PeerInfo> peerList = new ArrayList<>(); // will not include the current peer
+	private List<PeerInfo> peerList = new ArrayList<>(); // will not include the
+															// current peer
 	private List<PeerConnectionManager> peerConnectionManagers = new ArrayList<>();
 	private ProgramParams programParams = new ProgramParams();
 	private IFileManager iFileManager;
@@ -54,11 +55,9 @@ public class PeerProcess {
 		peerProcess.loadPeerInfoConfig();
 		peerProcess.loadFileManager();
 
-		peerProcess.determinePreferredNeighbours =
-				new DeterminePreferredNeighbours();
+		peerProcess.determinePreferredNeighbours = new DeterminePreferredNeighbours();
 
-		peerProcess.determineOptimisticallyUnchokedNeighbour =
-				new DetermineOptimisticallyUnchokedNeighbour();
+		peerProcess.determineOptimisticallyUnchokedNeighbour = new DetermineOptimisticallyUnchokedNeighbour();
 
 		// set up connection with all other peers
 		peerProcess.setUpConnectionWithOtherPeers();
@@ -66,11 +65,11 @@ public class PeerProcess {
 
 	public void setUpConnectionWithOtherPeers() {
 		/*
-		 * This method consist of two parts.
-		 * part 1 - the peer will initiate a handshake connection with all the peers
-		 * declared above the current peer in the peer config file.
-		 * part 2 - the peer will wait for a handshake from all the peers declared
-		 * below itself in the peer config file.
+		 * This method consist of two parts. part 1 - the peer will initiate a
+		 * handshake connection with all the peers declared above the current
+		 * peer in the peer config file. part 2 - the peer will wait for a
+		 * handshake from all the peers declared below itself in the peer config
+		 * file.
 		 */
 		PeerInfo currentPeerInfo = peerInfoMap.get(peerId);
 		int currentPeerDeclaredOnLine = currentPeerInfo.getLineDeclared();
@@ -78,19 +77,18 @@ public class PeerProcess {
 			PeerInfo remotePeerInfo = peerInfoMap.get(remotePeerId);
 			// compare line numbers
 			if (currentPeerDeclaredOnLine > remotePeerInfo.getLineDeclared()) {
-				// if the remote peer was declared above, the peer would already have been initiated
+				// if the remote peer was declared above, the peer would already
+				// have been initiated
 				// and the current peer should start the handshake process
 				try {
 					Socket socket = new Socket(remotePeerInfo.getIp(), remotePeerInfo.getPortNo());
 
 					logger.log(Level.ALL,
-							CommonUtils.formatString(
-									"peer # makes a connection to peer #",
-									peerId,
-									remotePeerId));
+							CommonUtils.formatString("peer # makes a connection to peer #", peerId, remotePeerId));
 
 					remotePeerInfo.initializeSocket(socket);
-					PeerConnectionManager peerConnectionManager = new PeerConnectionManager(currentPeerInfo, remotePeerInfo);
+					PeerConnectionManager peerConnectionManager = new PeerConnectionManager(currentPeerInfo,
+							remotePeerInfo);
 					peerConnectionManager.start();
 					peerConnectionManagers.add(peerConnectionManager);
 				} catch (UnknownHostException e) {
@@ -101,15 +99,22 @@ public class PeerProcess {
 			}
 		}
 
-		// this is now the second part for all the peers delcared below the current peer.
-		// as those peer processes might not have started, this current peer will wait on a
+		// this is now the second part for all the peers delcared below the
+		// current peer.
+		// as those peer processes might not have started, this current peer
+		// will wait on a
 		// new thread listening to connections.
 		new Thread(new Runnable() {
 
 			@Override
 			public void run() {
-				// we know that total connections for any peer should be (total_number_of_peers_in_system - 1)
-				int totalConnectionsRequired = peerInfoMap.keySet().size() - 1;  // set also contains current peerInfo
+				// we know that total connections for any peer should be
+				// (total_number_of_peers_in_system - 1)
+				int totalConnectionsRequired = peerInfoMap.keySet().size() - 1; // set
+																				// also
+																				// contains
+																				// current
+																				// peerInfo
 
 				// but we have already made some connections in part 1
 				int connectionCount = peerConnectionManagers.size();
@@ -120,9 +125,12 @@ public class PeerProcess {
 					// untill we get required number of connections listen
 					while (connectionCount < totalConnectionsRequired) {
 						Socket connectionSocket = serverSocket.accept();
-						PeerInfo remotePeerInfo = new PeerInfo(); // we will initialize later
+						PeerInfo remotePeerInfo = new PeerInfo(); // we will
+																	// initialize
+																	// later
 						remotePeerInfo.initializeSocket(connectionSocket);
-						PeerConnectionManager peerConnectionManager= new PeerConnectionManager(currentPeerInfo, remotePeerInfo);
+						PeerConnectionManager peerConnectionManager = new PeerConnectionManager(currentPeerInfo,
+								remotePeerInfo);
 						peerConnectionManager.start();
 						peerConnectionManagers.add(peerConnectionManager);
 						connectionCount++;
@@ -137,15 +145,13 @@ public class PeerProcess {
 		}).start();
 	}
 
-
 	public void loadPeerInfoConfig() {
 		peerInfoMap = new HashMap<>();
 		try {
-			BufferedReader br = new BufferedReader(
-					new FileReader(Constants.PEER_INFO_CONFIG_FILENAME));
+			BufferedReader br = new BufferedReader(new FileReader(Constants.PEER_INFO_CONFIG_FILENAME));
 
 			String line = null;
-			int peerDeclaredOnLine = 0;  // line number in file
+			int peerDeclaredOnLine = 0; // line number in file
 			while ((line = br.readLine()) != null) {
 				// split on whitespace
 				PeerInfo peerInfo = new PeerInfo(line.split("\\s+"), peerDeclaredOnLine++);
@@ -167,7 +173,7 @@ public class PeerProcess {
 		// shut down socket. Just to avoid some peer writing to a closed socket
 		// exception.
 		if (socketsToBeClosedRequestsPending.size() == peerList.size()) {
-			socketsToBeClosedRequestsPending.forEach(socket->{
+			socketsToBeClosedRequestsPending.forEach(socket -> {
 				try {
 					socket.close();
 				} catch (IOException e) {
@@ -192,8 +198,7 @@ public class PeerProcess {
 
 		FileHandler fileHandler = null;
 		try {
-			fileHandler = new FileHandler(CommonUtils.formatString(
-					"DEBUG.#.log", peerId));
+			fileHandler = new FileHandler(CommonUtils.formatString("DEBUG.#.log", peerId));
 		} catch (SecurityException | IOException e) {
 			e.printStackTrace();
 		}
@@ -203,14 +208,12 @@ public class PeerProcess {
 	}
 
 	public void loadFileManager() {
-		iFileManager = programParams.constructFileManager(
-				peerInfoMap.get(peerId).isHasFileInitially());
+		iFileManager = programParams.constructFileManager(peerInfoMap.get(peerId).isHasFileInitially());
 	}
 
 	public PeerInfo getPeerInfoForPeerId(int peerId) {
 		return peerInfoMap.get(peerId);
 	}
-
 
 	public ProgramParams getProgramParams() {
 		return programParams;

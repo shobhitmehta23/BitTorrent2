@@ -21,7 +21,6 @@ public class DataMessage implements Serializable {
 
 	public final static int BYTES_FOR_MESSAGE_LENGTH = 4;
 
-
 	private byte[] messageLength;
 	private byte messageType;
 	private byte[] payload;
@@ -55,14 +54,14 @@ public class DataMessage implements Serializable {
 
 	@Override
 	public String toString() {
-		return "DataMessage [messageLength=" + CommonUtils.byteArrayToInteger(messageLength) + ", messageType=" + messageType
-				+ ", payload=" + Arrays.toString(payload) + "]";
+		return "DataMessage [messageLength=" + CommonUtils.byteArrayToInteger(messageLength) + ", messageType="
+				+ messageType + ", payload=" + Arrays.toString(payload) + "]";
 	}
 
 	public void sendDataMessage(ObjectOutputStream objectOutputStream) {
 		synchronized (objectOutputStream) {
 			try {
-				//objectOutputStream.writeObject(serializeAsByte());
+				// objectOutputStream.writeObject(serializeAsByte());
 
 				objectOutputStream.writeObject(this);
 				objectOutputStream.flush();
@@ -79,7 +78,7 @@ public class DataMessage implements Serializable {
 		return ByteBuffer.wrap(data).getInt();
 	}
 
-	public byte[] getPieceData(byte []data) {
+	public byte[] getPieceData(byte[] data) {
 		if (messageType != DataMessage.MESSAGE_TYPE_PIECE) {
 			throw new RuntimeException("getPieceNumberForPieceData called for non-piece message");
 		}
@@ -87,7 +86,7 @@ public class DataMessage implements Serializable {
 		return Arrays.copyOfRange(data, Integer.BYTES, data.length);
 	}
 
-	@Deprecated  // the class now implements serializable
+	@Deprecated // the class now implements serializable
 	public byte[] serializeAsByte() {
 		byte data[] = new byte[4 + CommonUtils.byteArrayToInteger(messageLength)];
 
@@ -101,9 +100,9 @@ public class DataMessage implements Serializable {
 		return data;
 	}
 
-	@Deprecated  // the class now implements serializable
-	public void constructDataMessageFromByteArray(int msglen, byte []data) {
-		byte []temp = CommonUtils.intToByteArray(msglen);
+	@Deprecated // the class now implements serializable
+	public void constructDataMessageFromByteArray(int msglen, byte[] data) {
+		byte[] temp = CommonUtils.intToByteArray(msglen);
 		System.arraycopy(temp, 0, messageLength, 0, BYTES_FOR_MESSAGE_LENGTH);
 		messageType = data[0];
 
@@ -115,8 +114,8 @@ public class DataMessage implements Serializable {
 		}
 	}
 
-	@Deprecated  // the class now implements serializable
-	public void constructDataMessageFromByteArray(byte []data) {
+	@Deprecated // the class now implements serializable
+	public void constructDataMessageFromByteArray(byte[] data) {
 		System.arraycopy(data, 0, messageLength, 0, BYTES_FOR_MESSAGE_LENGTH);
 		messageType = data[BYTES_FOR_MESSAGE_LENGTH];
 
@@ -124,8 +123,7 @@ public class DataMessage implements Serializable {
 
 		if (messageLengthAsInt > 1) {
 			payload = new byte[messageLengthAsInt - 1];
-			System.arraycopy(
-					data, BYTES_FOR_MESSAGE_LENGTH + 1, payload, 0, (messageLengthAsInt - 1));
+			System.arraycopy(data, BYTES_FOR_MESSAGE_LENGTH + 1, payload, 0, (messageLengthAsInt - 1));
 		} else {
 			payload = null;
 		}

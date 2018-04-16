@@ -20,15 +20,15 @@ public class InMemoryFileManager implements IFileManager {
 	private String fileName;
 	private boolean hasFile;
 
-	public InMemoryFileManager(String fileName, int fileSize, int pieceSize,
-			boolean hasFile) {
-		totalPieces = (int) Math.ceil((double)fileSize/pieceSize);
+	public InMemoryFileManager(String fileName, int fileSize, int pieceSize, boolean hasFile) {
+		totalPieces = (int) Math.ceil((double) fileSize / pieceSize);
 		lastDataSize = fileSize % pieceSize;
-		lastDataSize = (lastDataSize == 0)? pieceSize : lastDataSize;
+		lastDataSize = (lastDataSize == 0) ? pieceSize : lastDataSize;
 		this.fileName = fileName;
 		this.hasFile = hasFile;
 
-		piecesAvailable = new BitSet(totalPieces + 1); // to avoid 0 based indexing
+		piecesAvailable = new BitSet(totalPieces + 1); // to avoid 0 based
+														// indexing
 		piecesAvailable.set(0); // it is a bit we are not using.
 
 		if (hasFile) {
@@ -115,7 +115,7 @@ public class InMemoryFileManager implements IFileManager {
 
 	@Override
 	public int getRandomMissingPieceIndex(BitSet remotePeerBitSet) {
-		BitSet temp = (BitSet)remotePeerBitSet.clone();
+		BitSet temp = (BitSet) remotePeerBitSet.clone();
 		temp.xor(piecesAvailable);
 		temp.andNot(piecesAvailable);
 

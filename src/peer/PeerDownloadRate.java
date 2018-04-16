@@ -7,7 +7,8 @@ public class PeerDownloadRate implements Comparable<PeerDownloadRate> {
 	private long requestTime;
 	private boolean isRequestTimeInitialized;
 
-	public PeerDownloadRate() {};
+	public PeerDownloadRate() {
+	};
 
 	public PeerDownloadRate(int peerId, double downloadRate) {
 		this.peerId = peerId;
@@ -27,7 +28,7 @@ public class PeerDownloadRate implements Comparable<PeerDownloadRate> {
 
 		long receivedTime = System.currentTimeMillis();
 		long totalTime = receivedTime - requestTime;
-		downloadRate = 1.0/((double)totalTime);
+		downloadRate = 1.0 / ((double) totalTime);
 		isRequestTimeInitialized = false;
 	}
 
@@ -38,7 +39,7 @@ public class PeerDownloadRate implements Comparable<PeerDownloadRate> {
 
 	@Override
 	public int compareTo(PeerDownloadRate o) {
-		return ((Double)this.getDownloadRate()).compareTo(o.getDownloadRate());
+		return ((Double) this.getDownloadRate()).compareTo(o.getDownloadRate());
 	}
 
 	public int getPeerId() {

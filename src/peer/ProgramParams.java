@@ -31,7 +31,7 @@ public class ProgramParams {
 			fileName = br.readLine().split("\\s+")[1];
 			fileSize = Integer.parseInt(br.readLine().split("\\s+")[1]);
 			pieceSize = Integer.parseInt(br.readLine().split("\\s+")[1]);
-			totalPieces = (int) Math.ceil((double)fileSize/pieceSize);
+			totalPieces = (int) Math.ceil((double) fileSize / pieceSize);
 			br.close();
 		} catch (IOException e) {
 			e.printStackTrace();
