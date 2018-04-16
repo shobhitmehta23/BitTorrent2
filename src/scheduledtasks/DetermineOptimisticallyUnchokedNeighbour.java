@@ -6,10 +6,13 @@ import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import messageformats.DataMessage;
 import peer.PeerProcess;
 import peer.ProgramParams;
+import utils.CommonUtils;
 
 public class DetermineOptimisticallyUnchokedNeighbour implements Runnable {
 
@@ -17,6 +20,7 @@ public class DetermineOptimisticallyUnchokedNeighbour implements Runnable {
 	private Integer optimisticallyUnchokedNeighbour = 0;
 	private DeterminePreferredNeighbours determinePreferredNeighbours;
 	private ScheduledExecutorService scheduler;
+	private Logger logger;
 
 	public DetermineOptimisticallyUnchokedNeighbour() {
 		determinePreferredNeighbours = PeerProcess.peerProcess.getDeterminePreferredNeighbours();
@@ -25,6 +29,7 @@ public class DetermineOptimisticallyUnchokedNeighbour implements Runnable {
 		scheduler = Executors.newScheduledThreadPool(SIZE_OF_THREAD_POOL);
 		scheduler.scheduleAtFixedRate(this, programParams.getOptimisticUnchokingInterval(),
 				programParams.getOptimisticUnchokingInterval(), TimeUnit.SECONDS);
+		logger = PeerProcess.peerProcess.getLogger();
 	}
 
 	@Override
@@ -44,6 +49,12 @@ public class DetermineOptimisticallyUnchokedNeighbour implements Runnable {
 			}
 		}
 
+		logger.log(Level.ALL,
+				CommonUtils.formatString(
+						"peer # has the optimistically unchoked neighbour #",
+						PeerProcess.peerProcess.getPeerId(),
+						optimisticallyUnchokedNeighbour));
+
 		ObjectOutputStream objectOutputStream =
 				PeerProcess.peerProcess.getPeerInfoForPeerId(optimisticallyUnchokedNeighbour).getOut();
 		new DataMessage(DataMessage.MESSAGE_TYPE_UNCHOKE, null).sendDataMessage(objectOutputStream);
@@ -51,7 +62,11 @@ public class DetermineOptimisticallyUnchokedNeighbour implements Runnable {
 
 
 	public void shutdown() {
-		scheduler.shutdown();
+		Logger debugLogger = PeerProcess.peerProcess.getDebugLogger();
+		debugLogger.log(Level.ALL, CommonUtils.formatString(
+				"shutdown attempted on scheduler for peer #",
+				PeerProcess.peerProcess.getPeerId()));
+		scheduler.shutdownNow();
 	}
 
 	public boolean isOptimisticallyUnchokedneighbour(int peerId) {

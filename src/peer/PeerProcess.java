@@ -14,16 +14,24 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import fileio.IFileManager;
+import logging.LogFormatter;
+import logging.PeerLogger;
 import scheduledtasks.DetermineOptimisticallyUnchokedNeighbour;
 import scheduledtasks.DeterminePreferredNeighbours;
+import utils.CommonUtils;
 import utils.Constants;
 
 public class PeerProcess {
 
 	public static PeerProcess peerProcess;
 	private int peerId;
+	private Logger logger;
+	private Logger debugLogger;
 	private Map<Integer, PeerInfo> peerInfoMap;
 	private List<PeerInfo> peerList = new ArrayList<>(); // will not include the current peer
 	private List<PeerConnectionManager> peerConnectionManagers = new ArrayList<>();
@@ -37,6 +45,10 @@ public class PeerProcess {
 
 		peerProcess = new PeerProcess();
 		peerProcess.peerId = Integer.parseInt(args[0]);
+
+		// initialize the logger
+		peerProcess.logger = new PeerLogger(peerProcess.peerId).getLogger();
+		peerProcess.initializeDebugLogger();
 
 		// load all peer info from peer config file.
 		peerProcess.loadPeerInfoConfig();
@@ -70,6 +82,13 @@ public class PeerProcess {
 				// and the current peer should start the handshake process
 				try {
 					Socket socket = new Socket(remotePeerInfo.getIp(), remotePeerInfo.getPortNo());
+
+					logger.log(Level.ALL,
+							CommonUtils.formatString(
+									"peer # makes a connection to peer #",
+									peerId,
+									remotePeerId));
+
 					remotePeerInfo.initializeSocket(socket);
 					PeerConnectionManager peerConnectionManager = new PeerConnectionManager(currentPeerInfo, remotePeerInfo);
 					peerConnectionManager.start();
@@ -167,6 +186,22 @@ public class PeerProcess {
 		System.out.println("peer id " + peerId + " terminating");
 	}
 
+	public void initializeDebugLogger() {
+		debugLogger = Logger.getLogger(Constants.DEBUG_LOGGER);
+		debugLogger.setLevel(Level.ALL);
+
+		FileHandler fileHandler = null;
+		try {
+			fileHandler = new FileHandler(CommonUtils.formatString(
+					"DEBUG.#.log", peerId));
+		} catch (SecurityException | IOException e) {
+			e.printStackTrace();
+		}
+
+		fileHandler.setFormatter(new LogFormatter());
+		debugLogger.addHandler(fileHandler);
+	}
+
 	public void loadFileManager() {
 		iFileManager = programParams.constructFileManager(
 				peerInfoMap.get(peerId).isHasFileInitially());
@@ -199,5 +234,13 @@ public class PeerProcess {
 
 	public DeterminePreferredNeighbours getDeterminePreferredNeighbours() {
 		return determinePreferredNeighbours;
+	}
+
+	public Logger getLogger() {
+		return logger;
+	}
+
+	public Logger getDebugLogger() {
+		return debugLogger;
 	}
 }

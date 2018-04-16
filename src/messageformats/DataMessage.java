@@ -18,12 +18,17 @@ public class DataMessage implements Serializable {
 	public final static byte MESSAGE_TYPE_BITFIELD = 5;
 	public final static byte MESSAGE_TYPE_REQUEST = 6;
 	public final static byte MESSAGE_TYPE_PIECE = 7;
+
 	public final static int BYTES_FOR_MESSAGE_LENGTH = 4;
 
 
-	private final byte[] messageLength;
-	private final byte messageType;
-	private final byte[] payload;
+	private byte[] messageLength;
+	private byte messageType;
+	private byte[] payload;
+
+	public DataMessage() {
+		messageLength = new byte[4];
+	}
 
 	public DataMessage(byte messageType, byte[] payload) {
 
@@ -55,10 +60,14 @@ public class DataMessage implements Serializable {
 	}
 
 	public void sendDataMessage(ObjectOutputStream objectOutputStream) {
-		try {
-			objectOutputStream.writeObject(this);
-		} catch (IOException e) {
-			e.printStackTrace();
+		synchronized (objectOutputStream) {
+			try {
+				//objectOutputStream.writeObject(serializeAsByte());
+
+				objectOutputStream.writeObject(this);
+				objectOutputStream.flush();
+			} catch (IOException e) {
+			}
 		}
 	}
 
@@ -76,5 +85,49 @@ public class DataMessage implements Serializable {
 		}
 
 		return Arrays.copyOfRange(data, Integer.BYTES, data.length);
+	}
+
+	@Deprecated  // the class now implements serializable
+	public byte[] serializeAsByte() {
+		byte data[] = new byte[4 + CommonUtils.byteArrayToInteger(messageLength)];
+
+		System.arraycopy(messageLength, 0, data, 0, 4);
+		data[4] = messageType;
+
+		if (payload != null) {
+			System.arraycopy(payload, 0, data, 5, payload.length);
+		}
+
+		return data;
+	}
+
+	@Deprecated  // the class now implements serializable
+	public void constructDataMessageFromByteArray(int msglen, byte []data) {
+		byte []temp = CommonUtils.intToByteArray(msglen);
+		System.arraycopy(temp, 0, messageLength, 0, BYTES_FOR_MESSAGE_LENGTH);
+		messageType = data[0];
+
+		if (msglen > 1) {
+			payload = new byte[msglen - 1];
+			System.arraycopy(data, 1, payload, 0, (msglen - 1));
+		} else {
+			payload = null;
+		}
+	}
+
+	@Deprecated  // the class now implements serializable
+	public void constructDataMessageFromByteArray(byte []data) {
+		System.arraycopy(data, 0, messageLength, 0, BYTES_FOR_MESSAGE_LENGTH);
+		messageType = data[BYTES_FOR_MESSAGE_LENGTH];
+
+		int messageLengthAsInt = CommonUtils.byteArrayToInteger(messageLength);
+
+		if (messageLengthAsInt > 1) {
+			payload = new byte[messageLengthAsInt - 1];
+			System.arraycopy(
+					data, BYTES_FOR_MESSAGE_LENGTH + 1, payload, 0, (messageLengthAsInt - 1));
+		} else {
+			payload = null;
+		}
 	}
 }

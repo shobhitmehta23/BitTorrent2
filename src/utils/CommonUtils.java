@@ -29,4 +29,12 @@ public class CommonUtils {
 				.put(arrayTwo)
 				.array();
 	}
+
+	public static String formatString(String str, Object...objects) {
+		for (Object object : objects) {
+			str = str.replaceFirst("#", object.toString());
+		}
+
+		return str;
+	}
 }

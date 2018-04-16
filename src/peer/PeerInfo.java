@@ -6,6 +6,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.BitSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import utils.CommonUtils;
 
 public class PeerInfo {
 	private int peerId;
@@ -82,6 +86,10 @@ public class PeerInfo {
 	}
 
 	public void bufferedShutdownSocket() {
+		Logger debugLogger = PeerProcess.peerProcess.getDebugLogger();
+		debugLogger.log(Level.ALL, CommonUtils.formatString(
+				"Buffered shutdown called on connection for peer # with peer #",
+				PeerProcess.peerProcess.getPeerId(), peerId));
 		PeerProcess.peerProcess.closeRemotePeerInfoSocket(peerId);
 	}
 

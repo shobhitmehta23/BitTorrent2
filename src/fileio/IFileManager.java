@@ -10,4 +10,6 @@ public interface IFileManager {
 	public boolean hasAllPieces();
 	public boolean hasAllPieces(BitSet remotePeerBitSet);
 	public BitSet getPieceSet();
+	public int getNumberOfPieces();
+	public int getTotalPieces();
 }

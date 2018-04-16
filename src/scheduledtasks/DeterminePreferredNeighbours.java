@@ -12,6 +12,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import fileio.IFileManager;
 import messageformats.DataMessage;
@@ -19,6 +21,7 @@ import peer.PeerDownloadRate;
 import peer.PeerInfo;
 import peer.PeerProcess;
 import peer.ProgramParams;
+import utils.CommonUtils;
 
 public class DeterminePreferredNeighbours implements Runnable {
 
@@ -29,6 +32,7 @@ public class DeterminePreferredNeighbours implements Runnable {
 	private int numberOfPreferredNeighbours;
 	private ScheduledExecutorService scheduler;
 	private IFileManager iFileManager;
+	private Logger logger;
 
 	public DeterminePreferredNeighbours() {
 		initializeDownloadRates();
@@ -42,6 +46,8 @@ public class DeterminePreferredNeighbours implements Runnable {
 		scheduler.scheduleAtFixedRate(
 				this, programParams.getUnchokingInterval(),
 				programParams.getUnchokingInterval(), TimeUnit.SECONDS);
+
+		logger = PeerProcess.peerProcess.getLogger();
 	}
 
 	@Override
@@ -79,6 +85,12 @@ public class DeterminePreferredNeighbours implements Runnable {
 		}
 
 		preferredNeighbourSet = newPreferredNeighbourSet;
+
+		logger.log(Level.ALL,
+				CommonUtils.formatString(
+						"peer # has the preferred neighbours #",
+						PeerProcess.peerProcess.getPeerId(),
+						preferredNeighbourSet));
 
 		// send unchoke message
 		for (int peer : preferredNeighbourSet) {

@@ -125,4 +125,14 @@ public class DiskBasedFileManager implements IFileManager {
 	public BitSet getPieceSet() {
 		return piecesAvailable;
 	}
+
+	@Override
+	synchronized public int getNumberOfPieces() {
+		return piecesAvailable.cardinality() - 1; // piece 0 is ignored but set
+	}
+
+	@Override
+	public int getTotalPieces() {
+		return totalPieces;
+	}
 }
