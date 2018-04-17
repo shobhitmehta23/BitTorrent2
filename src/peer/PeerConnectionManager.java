@@ -253,6 +253,9 @@ public class PeerConnectionManager extends Thread {
 
 		}
 
+		PeerProcess.peerProcess.getDebugLogger().log(Level.ALL,
+				CommonUtils.formatString("Exited while for peer #", remotePeerInfo.getPeerId()));
+
 		try {
 			iFileManager.flush();
 			remotePeerInfo.bufferedShutdownSocket();
