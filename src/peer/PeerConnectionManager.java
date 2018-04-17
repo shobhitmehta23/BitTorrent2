@@ -288,6 +288,12 @@ public class PeerConnectionManager extends Thread {
 
 					PeerProcess.peerProcess.getPeerConnectionManagers().forEach(peerConnectionManager -> {
 						try {
+							if (peerConnectionManager.getRemotePeerInfo().getPeerId() != remotePeerInfo.getPeerId()) {
+								try {
+									peerConnectionManager.interrupt();
+								} catch (Exception e) {
+								}
+							}
 							peerConnectionManager.getRemotePeerInfo().getSocket().close();
 						} catch (Exception e) {
 						}
