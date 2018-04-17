@@ -37,6 +37,8 @@ public class DetermineOptimisticallyUnchokedNeighbour implements Runnable {
 		Set<Integer> candidateSet = determinePreferredNeighbours.getNonPreferredButInterestedSet();
 
 		if (candidateSet.size() == 0) {
+			logger.log(Level.ALL, CommonUtils.formatString("peer # has no optimistically unchoked neighbour",
+					PeerProcess.peerProcess.getPeerId()));
 			return;
 		}
 
@@ -65,6 +67,6 @@ public class DetermineOptimisticallyUnchokedNeighbour implements Runnable {
 	}
 
 	public boolean isOptimisticallyUnchokedneighbour(int peerId) {
-		return peerId == (int) optimisticallyUnchokedNeighbour;
+		return peerId == optimisticallyUnchokedNeighbour;
 	}
 }
