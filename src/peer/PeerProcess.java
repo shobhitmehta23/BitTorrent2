@@ -7,13 +7,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -34,7 +30,7 @@ public class PeerProcess {
 	private Logger debugLogger;
 	private Map<Integer, PeerInfo> peerInfoMap;
 	private List<PeerInfo> peerList = new ArrayList<>(); // will not include the
-															// current peer
+	// current peer
 	private List<PeerConnectionManager> peerConnectionManagers = new ArrayList<>();
 	private ProgramParams programParams = new ProgramParams();
 	private IFileManager iFileManager;
@@ -111,10 +107,10 @@ public class PeerProcess {
 				// we know that total connections for any peer should be
 				// (total_number_of_peers_in_system - 1)
 				int totalConnectionsRequired = peerInfoMap.keySet().size() - 1; // set
-																				// also
-																				// contains
-																				// current
-																				// peerInfo
+				// also
+				// contains
+				// current
+				// peerInfo
 
 				// but we have already made some connections in part 1
 				int connectionCount = peerConnectionManagers.size();
@@ -126,8 +122,8 @@ public class PeerProcess {
 					while (connectionCount < totalConnectionsRequired) {
 						Socket connectionSocket = serverSocket.accept();
 						PeerInfo remotePeerInfo = new PeerInfo(); // we will
-																	// initialize
-																	// later
+						// initialize
+						// later
 						remotePeerInfo.initializeSocket(connectionSocket);
 						PeerConnectionManager peerConnectionManager = new PeerConnectionManager(currentPeerInfo,
 								remotePeerInfo);

@@ -2,11 +2,8 @@ package peer;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OptionalDataException;
-import java.io.OutputStream;
 import java.util.BitSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -17,7 +14,6 @@ import messageformats.HandshakeMessage;
 import scheduledtasks.DetermineOptimisticallyUnchokedNeighbour;
 import scheduledtasks.DeterminePreferredNeighbours;
 import utils.CommonUtils;
-import utils.Constants;
 
 public class PeerConnectionManager extends Thread {
 	private PeerInfo currentPeerInfo;
@@ -97,10 +93,8 @@ public class PeerConnectionManager extends Thread {
 		// while current peer does not have all pieces OR
 		// the remote peer does not have all pieces.
 
-		boolean test1 = false;
-		boolean test2 = false;
-		outer: while ((!(test1 = iFileManager.hasAllPieces()))
-				|| (!(test2 = iFileManager.hasAllPieces(remotePeerInfo.getPeerPieces())))) {
+		outer: while ((!(iFileManager.hasAllPieces()))
+				|| (!(iFileManager.hasAllPieces(remotePeerInfo.getPeerPieces())))) {
 
 			try {
 
