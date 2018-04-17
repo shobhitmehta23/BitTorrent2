@@ -1,5 +1,6 @@
 package peer;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -106,13 +107,14 @@ public class PeerConnectionManager extends Thread {
 				DataMessage messageReceived = null;
 				try {
 					messageReceived = (DataMessage) in.readObject();
+				} catch (EOFException e) {
+					break;
 				} catch (ClassNotFoundException | IOException e) {
 					// we might get an EOF exception during the last piece if it
 					// comes inside the while loop and some other peer sets the
 					// required piece. In that case the opposite peer might
 					// close the socket.
-					//continue;
-					break;
+					continue;
 				}
 
 				switch (messageReceived.getMessageType()) {
