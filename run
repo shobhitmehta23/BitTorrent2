@@ -1,0 +1,10 @@
+#!/bin/bash
+java -cp compiled_source/ peer/PeerProcess 1001 &
+sleep 4
+java -cp compiled_source/ peer/PeerProcess 1002 &
+sleep 4
+java -cp compiled_source/ peer/PeerProcess 1003 &
+sleep 4
+java -cp compiled_source/ peer/PeerProcess 1004 &
+sleep 4
+java -cp compiled_source/ peer/PeerProcess 1005 &
