@@ -98,7 +98,7 @@ public class PeerConnectionManager extends Thread {
 
 		boolean test1 = false;
 		boolean test2 = false;
-		while ((!(test1 = iFileManager.hasAllPieces()))
+		outer: while ((!(test1 = iFileManager.hasAllPieces()))
 				|| (!(test2 = iFileManager.hasAllPieces(remotePeerInfo.getPeerPieces())))) {
 
 			try {
@@ -241,6 +241,9 @@ public class PeerConnectionManager extends Thread {
 					peerDownloadRate.cancelTime();
 					determinePreferredNeighbours.updateDownloadRate(peerDownloadRate);
 					break;
+
+				case DataMessage.MESSAGE_TYPE_TERMINATE:
+					break outer;
 				}
 
 			} catch (Exception e) {
@@ -255,6 +258,8 @@ public class PeerConnectionManager extends Thread {
 
 		PeerProcess.peerProcess.getDebugLogger().log(Level.ALL,
 				CommonUtils.formatString("Exited while for peer #", remotePeerInfo.getPeerId()));
+
+		new DataMessage(DataMessage.MESSAGE_TYPE_TERMINATE, null).sendDataMessage(out);
 
 		try {
 			iFileManager.flush();

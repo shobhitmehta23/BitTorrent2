@@ -18,6 +18,7 @@ public class DataMessage implements Serializable {
 	public final static byte MESSAGE_TYPE_BITFIELD = 5;
 	public final static byte MESSAGE_TYPE_REQUEST = 6;
 	public final static byte MESSAGE_TYPE_PIECE = 7;
+	public final static byte MESSAGE_TYPE_TERMINATE = 8;
 
 	public final static int BYTES_FOR_MESSAGE_LENGTH = 4;
 
