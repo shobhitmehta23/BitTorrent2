@@ -40,18 +40,21 @@ public class ProgramParams {
 
 	public IFileManager constructFileManager(boolean hasFile) {
 
+		// we always assume we ran the program from inside the root folder.
+		// Converting all paths to required format.
+		Path currentPathParent = FileSystems.getDefault().getPath(".").toAbsolutePath().getParent();
+		String peerFolderName = currentPathParent.toString() + "/" + "peer_" + PeerProcess.peerProcess.getPeerId();
+
+		// make directory in cases where peer does not have the required file
 		if (!hasFile) {
-			// construct peer directory
-			Path currentPathParent = FileSystems.getDefault().getPath(".").toAbsolutePath().getParent();
-			String peerFolderName = currentPathParent.toString() + "/" + "peer_" + PeerProcess.peerProcess.getPeerId();
 			File peerDir = new File(peerFolderName);
 			peerDir.mkdirs();
-
-			// make file path point to the newly constructed directory
-			File tempFileName = new File(fileName);
-			String fileNameWithoutPath = tempFileName.getName();
-			fileName = new File(peerFolderName, fileNameWithoutPath).getAbsolutePath();
 		}
+
+		// make file path point to the newly constructed directory
+		File tempFileName = new File(fileName);
+		String fileNameWithoutPath = tempFileName.getName();
+		fileName = new File(peerFolderName, fileNameWithoutPath).getAbsolutePath();
 
 		return FileManagerFactory.constructFileManager(fileName, fileSize, pieceSize, hasFile);
 	}

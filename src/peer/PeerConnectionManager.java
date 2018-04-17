@@ -96,7 +96,10 @@ public class PeerConnectionManager extends Thread {
 		// while current peer does not have all pieces OR
 		// the remote peer does not have all pieces.
 
-		while ((!(iFileManager.hasAllPieces())) || (!(iFileManager.hasAllPieces(remotePeerInfo.getPeerPieces())))) {
+		boolean test1 = false;
+		boolean test2 = false;
+		while ((!(test1 = iFileManager.hasAllPieces()))
+				|| (!(test2 = iFileManager.hasAllPieces(remotePeerInfo.getPeerPieces())))) {
 
 			try {
 
@@ -104,8 +107,10 @@ public class PeerConnectionManager extends Thread {
 				try {
 					messageReceived = (DataMessage) in.readObject();
 				} catch (ClassNotFoundException | IOException e) {
-					logger.log(Level.ALL, "exception in " + remotePeerInfo.getPeerId());
-					e.printStackTrace();
+					// we might get an EOF exception during the last piece if it
+					// comes inside the while loop and some other peer sets the
+					// required piece. In that case the opposite peer might
+					// close the socket.
 					continue;
 				}
 
@@ -239,6 +244,7 @@ public class PeerConnectionManager extends Thread {
 				}
 
 			} catch (Exception e) {
+				// log the error
 				PeerProcess.peerProcess.getDebugLogger().log(Level.ALL,
 						CommonUtils.formatString(
 								"Exception encoutered and handle in connection between peer # and peer #",
