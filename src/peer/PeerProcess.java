@@ -42,6 +42,7 @@ public class PeerProcess {
 	private DetermineOptimisticallyUnchokedNeighbour determineOptimisticallyUnchokedNeighbour;
 	private DeterminePreferredNeighbours determinePreferredNeighbours;
 	private List<Socket> socketsToBeClosedRequestsPending = new ArrayList<>();
+	private boolean areSchedulersShutdown = false;
 
 	public static void main(String[] args) {
 
@@ -195,9 +196,13 @@ public class PeerProcess {
 		}
 	}
 
-	private void shutDownSchedulers() {
+	synchronized public void shutDownSchedulers() {
+		if (areSchedulersShutdown) {
+			return;
+		}
 		determineOptimisticallyUnchokedNeighbour.shutdown();
 		determinePreferredNeighbours.shutdown();
+		areSchedulersShutdown = true;
 		System.out.println("peer id " + peerId + " terminating");
 	}
 

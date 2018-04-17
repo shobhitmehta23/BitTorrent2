@@ -282,8 +282,10 @@ public class PeerConnectionManager extends Thread {
 			DataMessage messageReceived = null;
 			try {
 				messageReceived = (DataMessage) in.readObject();
-
+				PeerProcess.peerProcess.getDebugLogger().log(Level.ALL,
+						CommonUtils.formatString("recvd term peer #", remotePeerInfo.getPeerId()));
 				if (messageReceived.getMessageType() == DataMessage.MESSAGE_TYPE_TERMINATE) {
+
 					PeerProcess.peerProcess.getPeerConnectionManagers().forEach(peerConnectionManager -> {
 						try {
 							peerConnectionManager.getRemotePeerInfo().getSocket().close();
