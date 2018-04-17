@@ -6,7 +6,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OptionalDataException;
 import java.io.OutputStream;
+import java.net.Socket;
 import java.util.BitSet;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -261,13 +264,41 @@ public class PeerConnectionManager extends Thread {
 		PeerProcess.peerProcess.getDebugLogger().log(Level.ALL,
 				CommonUtils.formatString("Exited while for peer #", remotePeerInfo.getPeerId()));
 
-		new DataMessage(DataMessage.MESSAGE_TYPE_TERMINATE, null).sendDataMessage(out);
-
 		try {
 			iFileManager.flush();
 			remotePeerInfo.bufferedShutdownSocket();
+
+			// keep listening for terminate
+			keepListeningForTerminate();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	public void keepListeningForTerminate() {
+
+		ObjectInputStream in = remotePeerInfo.getIn();
+		while (true) {
+			DataMessage messageReceived = null;
+			try {
+				messageReceived = (DataMessage) in.readObject();
+
+				if (messageReceived.getMessageType() == DataMessage.MESSAGE_TYPE_TERMINATE) {
+					PeerProcess.peerProcess.getPeerConnectionManagers().forEach(peerConnectionManager -> {
+						try {
+							peerConnectionManager.getRemotePeerInfo().getSocket().close();
+						} catch (Exception e) {
+						}
+					});
+				}
+			} catch (ClassNotFoundException | IOException e) {
+				break;
+			}
+		}
+
+	}
+
+	public PeerInfo getRemotePeerInfo() {
+		return remotePeerInfo;
 	}
 }

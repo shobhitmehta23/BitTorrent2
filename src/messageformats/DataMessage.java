@@ -66,7 +66,7 @@ public class DataMessage implements Serializable {
 
 				objectOutputStream.writeObject(this);
 				objectOutputStream.flush();
-			} catch (IOException e) {
+			} catch (Exception e) {
 			}
 		}
 	}

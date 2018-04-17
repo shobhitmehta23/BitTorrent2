@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 import fileio.IFileManager;
 import logging.LogFormatter;
 import logging.PeerLogger;
+import messageformats.DataMessage;
 import scheduledtasks.DetermineOptimisticallyUnchokedNeighbour;
 import scheduledtasks.DeterminePreferredNeighbours;
 import utils.CommonUtils;
@@ -173,6 +174,14 @@ public class PeerProcess {
 		// shut down socket. Just to avoid some peer writing to a closed socket
 		// exception.
 		if (socketsToBeClosedRequestsPending.size() == peerList.size()) {
+
+			peerList.forEach(peerInfo->{
+				try {
+					new DataMessage(DataMessage.MESSAGE_TYPE_TERMINATE, null).sendDataMessage(peerInfo.getOut());
+				} catch (Exception e) {
+				}
+			});
+
 			socketsToBeClosedRequestsPending.forEach(socket -> {
 				try {
 					socket.close();
@@ -245,5 +254,9 @@ public class PeerProcess {
 
 	public Logger getDebugLogger() {
 		return debugLogger;
+	}
+
+	public List<PeerConnectionManager> getPeerConnectionManagers() {
+		return peerConnectionManagers;
 	}
 }
