@@ -292,6 +292,8 @@ public class PeerConnectionManager extends Thread {
 						} catch (Exception e) {
 						}
 					});
+
+					PeerProcess.peerProcess.shutDownSchedulers();
 				}
 			} catch (ClassNotFoundException | IOException e) {
 				break;
