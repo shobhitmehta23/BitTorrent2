@@ -111,7 +111,8 @@ public class PeerConnectionManager extends Thread {
 					// comes inside the while loop and some other peer sets the
 					// required piece. In that case the opposite peer might
 					// close the socket.
-					continue;
+					//continue;
+					break;
 				}
 
 				switch (messageReceived.getMessageType()) {
