@@ -243,6 +243,8 @@ public class PeerConnectionManager extends Thread {
 					break;
 
 				case DataMessage.MESSAGE_TYPE_TERMINATE:
+					PeerProcess.peerProcess.getDebugLogger().log(Level.ALL,
+							"terminate received from peer " + remotePeerInfo.getPeerId());
 					break outer;
 				}
 
